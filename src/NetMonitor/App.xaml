@@ -3,26 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              ShutdownMode="OnMainWindowClose">
     <Application.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis" />
-        <SolidColorBrush x:Key="Accent" Color="#2563EB" />
-        <SolidColorBrush x:Key="Muted" Color="#6B7280" />
-        <SolidColorBrush x:Key="Down" Color="#D97706" />
-        <SolidColorBrush x:Key="Up" Color="#DB2777" />
-        <Style TargetType="Button">
-            <Setter Property="Padding" Value="10,3" />
-            <Setter Property="Margin" Value="2,0" />
-        </Style>
-        <Style TargetType="DataGrid">
-            <Setter Property="AutoGenerateColumns" Value="False" />
-            <Setter Property="IsReadOnly" Value="True" />
-            <Setter Property="SelectionMode" Value="Single" />
-            <Setter Property="HeadersVisibility" Value="Column" />
-            <Setter Property="GridLinesVisibility" Value="Horizontal" />
-            <Setter Property="HorizontalGridLinesBrush" Value="#EEF0F3" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Background" Value="White" />
-            <Setter Property="RowHeight" Value="34" />
-            <Setter Property="CanUserAddRows" Value="False" />
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

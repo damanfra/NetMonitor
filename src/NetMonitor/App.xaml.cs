@@ -25,6 +25,12 @@ namespace NetMonitor
             // Uma única instância: duas sessões ETW com o mesmo nome se derrubariam.
             // Se já houver uma aberta, pede para ela aparecer e sai.
             _instanceMutex = new Mutex(true, InstanceMutexName, out var isFirst);
+            if (!isFirst && e.Args.Contains(UpdateService.UpdatedArgument, StringComparer.OrdinalIgnoreCase))
+            {
+                // Reiniciado por uma auto-atualização: espera a versão antiga terminar de fechar.
+                try { isFirst = _instanceMutex.WaitOne(TimeSpan.FromSeconds(30)); }
+                catch (AbandonedMutexException) { isFirst = true; }
+            }
             if (!isFirst)
             {
                 try { EventWaitHandle.OpenExisting(ShowEventName).Set(); }
@@ -82,6 +88,9 @@ namespace NetMonitor
 
             // Se o .exe foi movido/atualizado, mantém a tarefa de inicialização apontando para ele.
             Task.Run(StartupManager.RefreshIfEnabled);
+            Task.Run(UpdateService.CleanupOldVersion);
+            if (settings.CheckUpdatesOnStartup)
+                vm.CheckForUpdatesInBackground();
         }
 
         protected override void OnExit(ExitEventArgs e)

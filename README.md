@@ -1,5 +1,7 @@
 # NetMonitor
 
+<img src="docs/icon.png" width="96" align="right" alt="ícone" />
+
 Monitor de tráfego de rede **por aplicativo** para Windows 10/11, com bloqueio de um clique
 via Firewall do Windows — uma alternativa simples e gratuita ao GlassWire.
 
@@ -21,7 +23,9 @@ via Firewall do Windows — uma alternativa simples e gratuita ao GlassWire.
 - Minimiza para a bandeja do sistema sem parar de monitorar.
 - **Alertas de consumo**: notificação do Windows quando um app passa de X MB em um período
   (padrão: 100 MB em 5 minutos), no máximo um aviso por app por período.
-- Aba **Configurações**: iniciar com o Windows (Sim/Não), alertas, bandeja, filtros.
+- Aba **Configurações**: iniciar com o Windows (Sim/Não), atualizações, alertas, bandeja, filtros, idioma.
+- **Atualização automática**: procura nova versão ao iniciar e mostra um aviso discreto no topo;
+  "Atualizar agora" baixa do GitHub, confere a integridade e reinicia o programa.
 
 ## Download (sem compilar)
 

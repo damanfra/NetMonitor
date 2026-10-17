@@ -29,6 +29,11 @@ namespace NetMonitor.ViewModels
         private DateTime _lastAlertCheck = DateTime.MinValue;
         private readonly Dictionary<string, DateTime> _lastAlertByApp = new(StringComparer.OrdinalIgnoreCase);
         private bool _startWithWindows;
+        private int _selectedTabIndex;
+        private UpdateInfo? _availableUpdate;
+        private bool _isCheckingUpdate, _isInstallingUpdate;
+        private double _updateProgress;
+        private string _updateStatusText = "";
 
         private IntervalOption _selectedInterval;
         private string _searchText = "";
@@ -78,6 +83,14 @@ namespace NetMonitor.ViewModels
             TestNotificationCommand = new RelayCommand(_ => NotificationRequested?.Invoke(
                 Loc.T("Notification_TestTitle"), Loc.T("Notification_TestBody")));
 
+            CheckUpdatesCommand = new RelayCommand(_ => _ = CheckForUpdatesAsync(userInitiated: true),
+                _ => !_isCheckingUpdate && !_isInstallingUpdate);
+            InstallUpdateCommand = new RelayCommand(_ => _ = InstallUpdateAsync(),
+                _ => _availableUpdate != null && !_isInstallingUpdate);
+            OpenReleasePageCommand = new RelayCommand(_ => Shell(_availableUpdate?.PageUrl
+                ?? $"https://github.com/{UpdateService.Repository}/releases"));
+            ShowUpdateCommand = new RelayCommand(_ => SelectedTabIndex = SettingsTabIndex);
+
             try { _startWithWindows = StartupManager.IsEnabled(); }
             catch { _startWithWindows = false; }
 
@@ -100,6 +113,95 @@ namespace NetMonitor.ViewModels
         public ICommand OpenFirewallCommand { get; }
         public ICommand OpenSettingsFolderCommand { get; }
         public ICommand TestNotificationCommand { get; }
+        public ICommand CheckUpdatesCommand { get; }
+        public ICommand InstallUpdateCommand { get; }
+        public ICommand OpenReleasePageCommand { get; }
+        public ICommand ShowUpdateCommand { get; }
+
+        private const int SettingsTabIndex = 3;
+
+        public int SelectedTabIndex { get => _selectedTabIndex; set => Set(ref _selectedTabIndex, value); }
+
+        public string WindowTitle => Loc.T("Window_Title", UpdateService.CurrentVersion.ToString(3));
+
+        // ---------- Atualizações ----------
+
+        public bool CheckUpdatesOnStartup
+        {
+            get => _settings.CheckUpdatesOnStartup;
+            set { _settings.CheckUpdatesOnStartup = value; SettingsStore.Save(_settings); Raise(nameof(CheckUpdatesOnStartup)); }
+        }
+
+        public bool UpdateAvailable => _availableUpdate != null;
+        public string UpdateBadgeText => _availableUpdate == null ? "" : Loc.T("Update_Badge", _availableUpdate.Version.ToString(3));
+        public bool IsInstallingUpdate { get => _isInstallingUpdate; private set => Set(ref _isInstallingUpdate, value); }
+        public double UpdateProgress { get => _updateProgress; private set => Set(ref _updateProgress, value); }
+        public string UpdateStatusText { get => _updateStatusText; private set => Set(ref _updateStatusText, value); }
+
+        public void CheckForUpdatesInBackground() => _ = CheckForUpdatesAsync(userInitiated: false);
+
+        private async System.Threading.Tasks.Task CheckForUpdatesAsync(bool userInitiated)
+        {
+            if (_isCheckingUpdate)
+                return;
+            _isCheckingUpdate = true;
+            UpdateStatusText = Loc.T("Update_Checking");
+            try
+            {
+                if (!userInitiated)
+                    await System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(5)); // não atrasar a abertura
+                _availableUpdate = await UpdateService.CheckAsync();
+                UpdateStatusText = _availableUpdate != null
+                    ? Loc.T("Update_Available", _availableUpdate.Version.ToString(3))
+                    : Loc.T("Update_UpToDate", DateTime.Now);
+            }
+            catch (Exception ex)
+            {
+                // Silencioso na verificação automática; só mostra o motivo na aba Configurações.
+                UpdateStatusText = Loc.T("Update_CheckFailed", ex.Message);
+            }
+            finally
+            {
+                _isCheckingUpdate = false;
+                Raise(nameof(UpdateAvailable));
+                Raise(nameof(UpdateBadgeText));
+                CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
+        private async System.Threading.Tasks.Task InstallUpdateAsync()
+        {
+            var update = _availableUpdate;
+            if (update == null)
+                return;
+            if (MessageBox.Show(Loc.T("Update_Confirm", update.Version.ToString(3)), Loc.T("Update_ConfirmTitle"),
+                    MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
+                return;
+
+            IsInstallingUpdate = true;
+            UpdateStatusText = Loc.T("Update_Downloading");
+            try
+            {
+                var progress = new Progress<double>(p =>
+                {
+                    UpdateProgress = p;
+                    UpdateStatusText = Loc.T("Update_DownloadingPercent", p);
+                });
+                await UpdateService.ApplyAsync(update, progress);
+                Application.Current.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                UpdateStatusText = Loc.T("Update_InstallFailed", ex.Message);
+                MessageBox.Show(Loc.T("Update_InstallFailed", ex.Message), Loc.T("Common_Error"),
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsInstallingUpdate = false;
+                CommandManager.InvalidateRequerySuggested();
+            }
+        }
 
         /// <summary>Pedido de notificação na bandeja (título, texto). A janela é quem exibe.</summary>
         public event Action<string, string>? NotificationRequested;
@@ -155,6 +257,8 @@ namespace NetMonitor.ViewModels
                 Loc.Instance.SetLanguage(value);
                 Raise(nameof(LanguageCode));
                 Raise(nameof(VersionText));
+                Raise(nameof(WindowTitle));
+                Raise(nameof(UpdateBadgeText));
                 Raise(nameof(Intervals));
                 Refresh();
             }

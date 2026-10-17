@@ -2,298 +2,567 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:l="clr-namespace:NetMonitor.Localization"
-        Title="{l:T Window_Title}"
-        Width="1180" Height="760" MinWidth="820" MinHeight="480"
-        Background="#F7F8FA" FontFamily="Segoe UI" FontSize="13"
+        Title="{Binding WindowTitle}"
+        Icon="pack://application:,,,/Assets/NetMonitor.ico"
+        Width="1240" Height="800" MinWidth="900" MinHeight="540"
+        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
+        FontFamily="{StaticResource UiFont}" FontSize="13"
+        TextOptions.TextFormattingMode="Display" UseLayoutRounding="True"
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
-        <!-- Célula "aplicativo": ícone + nome + subtítulo -->
+        <!-- Célula "aplicativo": ícone + nome + subtítulo + selo BLOQUEADO -->
         <DataTemplate x:Key="AppCell">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" ToolTip="{Binding ExePath}">
-                <Image Source="{Binding Icon}" Width="20" Height="20" Margin="4,0,8,0" />
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Text="{Binding Subtitle}" FontSize="11" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" />
-                </StackPanel>
-                <Border Background="#FEE2E2" CornerRadius="3" Padding="5,0" Margin="8,0,0,0" VerticalAlignment="Center"
-                        Visibility="{Binding IsBlocked, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="{l:T Badge_Blocked}" FontSize="10" FontWeight="Bold" Foreground="#B91C1C" />
-                </Border>
-            </StackPanel>
-        </DataTemplate>
-
-        <DataTemplate x:Key="TotalCell">
-            <StackPanel VerticalAlignment="Center" Margin="4,0">
-                <TextBlock Text="{Binding TotalText}" FontWeight="SemiBold" />
-                <ProgressBar Value="{Binding Share, Mode=OneWay}" Maximum="1" Height="3" BorderThickness="0"
-                             Background="#E5E7EB" Foreground="{StaticResource Accent}" />
-            </StackPanel>
-        </DataTemplate>
-    </Window.Resources>
-
-    <DockPanel>
-        <!-- Barra superior -->
-        <Border DockPanel.Dock="Top" Background="White" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="14,10">
-            <Grid>
+            <Grid ToolTip="{Binding ExePath}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Width="32" Height="32" CornerRadius="8" Background="{StaticResource SurfaceAltBrush}"
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="0,0,10,0">
+                    <Grid>
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE774;" Foreground="{StaticResource Muted}" HorizontalAlignment="Center" />
+                        <Image Source="{Binding Icon}" Width="20" Height="20" RenderOptions.BitmapScalingMode="HighQuality" />
+                    </Grid>
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <Border Background="{StaticResource DangerSoftBrush}" BorderBrush="{StaticResource DangerBorderBrush}" BorderThickness="1"
+                                CornerRadius="4" Padding="6,0" Margin="8,0,0,0" VerticalAlignment="Center"
+                                Visibility="{Binding IsBlocked, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{l:T Badge_Blocked}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource DangerBrush}" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="{Binding Subtitle}" FontSize="11.5" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TotalCell">
+            <StackPanel VerticalAlignment="Center" Margin="0,0,8,0">
+                <TextBlock Text="{Binding TotalText}" FontWeight="SemiBold" />
+                <ProgressBar Value="{Binding Share, Mode=OneWay}" Maximum="1" Margin="0,4,0,0" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- Cartão de estatística do cabeçalho -->
+        <Style x:Key="StatCard" TargetType="Border" BasedOn="{StaticResource Card}">
+            <Setter Property="Padding" Value="12,8,18,8" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+        </Style>
+        <Style x:Key="StatIcon" TargetType="Border">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="CornerRadius" Value="17" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+        </Style>
+        <Style x:Key="StatValue" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <!-- Linha de configuração (título + descrição à esquerda, controle à direita) -->
+        <Style x:Key="SettingRow" TargetType="Border">
+            <Setter Property="Padding" Value="18,14" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="0,1,0,0" />
+        </Style>
+        <Style x:Key="SettingTitle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style x:Key="SettingHint" TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+            <Setter Property="Margin" Value="0,3,24,0" />
+        </Style>
+        <Style x:Key="SettingCardHeader" TargetType="StackPanel">
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="Margin" Value="18,14" />
+        </Style>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- ================= Cabeçalho: totais do período + aviso de atualização ================= -->
+        <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceBrush}" Padding="20,14,20,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="{l:T Toolbar_ShowActivity}" VerticalAlignment="Center" Margin="0,0,6,0" />
-                    <ComboBox ItemsSource="{Binding Intervals}" SelectedItem="{Binding SelectedInterval}"
-                              DisplayMemberPath="Label" Width="160" />
-                    <TextBlock Text="{l:T Toolbar_Search}" VerticalAlignment="Center" Margin="16,0,6,0" />
-                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Width="180" VerticalContentAlignment="Center" />
-                    <CheckBox Content="{l:T Filter_HideWindows}" IsChecked="{Binding HideWindowsComponents}"
-                              VerticalAlignment="Center" Margin="16,0,0,0"
-                              ToolTip="{l:T Filter_HideWindows_Tooltip}" />
-                    <CheckBox Content="{l:T Filter_HideMicrosoft}" IsChecked="{Binding HideMicrosoftApps}"
-                              VerticalAlignment="Center" Margin="12,0,0,0"
-                              ToolTip="{l:T Filter_HideMicrosoft_Tooltip}" />
-                </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="↓ " Foreground="{StaticResource Down}" FontWeight="Bold" />
-                    <TextBlock Text="{Binding TotalDownText}" FontWeight="SemiBold" />
-                    <TextBlock Text="   ↑ " Foreground="{StaticResource Up}" FontWeight="Bold" />
-                    <TextBlock Text="{Binding TotalUpText}" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding RateText}" Foreground="{StaticResource Muted}" Margin="14,0,0,0" />
-                </StackPanel>
+                <WrapPanel>
+                    <Border Style="{StaticResource StatCard}">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource StatIcon}" Background="{StaticResource DownSoftBrush}">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE896;" Foreground="{StaticResource Down}" HorizontalAlignment="Center" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{l:T Stat_Download}" Style="{StaticResource Caption}" />
+                                <TextBlock Text="{Binding TotalDownText}" Style="{StaticResource StatValue}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource StatCard}">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource StatIcon}" Background="{StaticResource UpSoftBrush}">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE898;" Foreground="{StaticResource Up}" HorizontalAlignment="Center" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{l:T Stat_Upload}" Style="{StaticResource Caption}" />
+                                <TextBlock Text="{Binding TotalUpText}" Style="{StaticResource StatValue}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource StatCard}">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource StatIcon}" Background="{StaticResource AccentSoftBrush}">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE9D9;" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" />
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{l:T Stat_Now}" Style="{StaticResource Caption}" />
+                                <TextBlock Text="{Binding RateText}" Style="{StaticResource StatValue}" FontSize="14" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </WrapPanel>
+
+                <!-- Aviso discreto de nova versão: leva à aba Configurações -->
+                <Button Grid.Column="1" Style="{StaticResource PillButton}" VerticalAlignment="Center"
+                        Command="{Binding ShowUpdateCommand}"
+                        Visibility="{Binding UpdateAvailable, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE896;" FontSize="12" Margin="0,0,6,0" />
+                        <TextBlock Text="{Binding UpdateBadgeText}" />
+                    </StackPanel>
+                </Button>
             </Grid>
         </Border>
 
-        <!-- Avisos -->
-        <Border DockPanel.Dock="Top" Background="#FEE2E2" Padding="14,6" Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-            <TextBlock Text="{Binding ErrorBanner}" Foreground="#991B1B" TextWrapping="Wrap" />
-        </Border>
-        <Border DockPanel.Dock="Top" Background="#FEF3C7" Padding="14,6" Visibility="{Binding FirewallDisabled, Converter={StaticResource BoolToVis}}">
-            <TextBlock Foreground="#92400E" TextWrapping="Wrap"
-                       Text="{l:T Banner_FirewallDisabled}" />
+        <!-- ================= Barra de status ================= -->
+        <Border DockPanel.Dock="Bottom" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="0,1,0,0" Padding="20,6">
+            <TextBlock Text="{Binding StatusText}" Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
         </Border>
 
-        <!-- Barra de status -->
-        <Border DockPanel.Dock="Bottom" Background="White" BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Padding="14,4">
-            <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource Muted}" />
-        </Border>
+        <!-- ================= Avisos ================= -->
+        <StackPanel DockPanel.Dock="Top">
+            <Border Background="{StaticResource DangerSoftBrush}" BorderBrush="{StaticResource DangerBorderBrush}" BorderThickness="0,1"
+                    Padding="20,8" Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xE7BA;" Foreground="{StaticResource DangerBrush}" Margin="0,0,10,0" />
+                    <TextBlock Text="{Binding ErrorBanner}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+            <Border Background="{StaticResource WarningSoftBrush}" BorderBrush="{StaticResource WarningBorderBrush}" BorderThickness="0,1"
+                    Padding="20,8" Visibility="{Binding FirewallDisabled, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xE7BA;" Foreground="{StaticResource WarningTextBrush}" Margin="0,0,10,0" />
+                    <TextBlock Text="{l:T Banner_FirewallDisabled}" Foreground="{StaticResource WarningTextBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
 
-        <TabControl Margin="10" Padding="0">
+        <TabControl SelectedIndex="{Binding SelectedTabIndex}">
             <!-- ================= ATIVIDADE ================= -->
             <TabItem Header="{Binding ActivityTabHeader}">
-                <Grid>
+                <Grid Margin="20,14,20,16">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="*" MinHeight="120" />
-                        <RowDefinition Height="5" />
-                        <RowDefinition Height="200" MinHeight="60" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" MinHeight="140" />
+                        <RowDefinition Height="10" />
+                        <RowDefinition Height="220" MinHeight="80" />
                     </Grid.RowDefinitions>
 
-                    <DataGrid x:Name="ActivityGrid" ItemsSource="{Binding ActivityRows}"
-                              SelectedItem="{Binding SelectedRow}">
-                        <DataGrid.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="{l:T Menu_ToggleBlock}" Command="{Binding ToggleBlockCommand}" CommandParameter="{Binding SelectedRow}" />
-                                <MenuItem Header="{l:T Menu_Hide}" Command="{Binding HideCommand}" CommandParameter="{Binding SelectedRow}" />
-                                <Separator />
-                                <MenuItem Header="{l:T Menu_OpenLocation}" Command="{Binding OpenLocationCommand}" CommandParameter="{Binding SelectedRow}" />
-                                <MenuItem Header="{l:T Menu_CopyPath}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedRow}" />
-                            </ContextMenu>
-                        </DataGrid.ContextMenu>
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="{l:T Column_App}" Width="*" SortMemberPath="DisplayName" CellTemplate="{StaticResource AppCell}" />
-                            <DataGridTextColumn Header="{l:T Column_Download}" Binding="{Binding DownloadText}" SortMemberPath="Download" Width="95" />
-                            <DataGridTextColumn Header="{l:T Column_Upload}" Binding="{Binding UploadText}" SortMemberPath="Upload" Width="95" />
-                            <DataGridTemplateColumn Header="{l:T Column_Total}" SortMemberPath="Total" Width="110" CellTemplate="{StaticResource TotalCell}" />
-                            <DataGridTextColumn Header="{l:T Column_Now}" Binding="{Binding RateText}" SortMemberPath="CurrentRate" Width="170" />
-                            <DataGridTextColumn Header="{l:T Column_LastActivity}" Binding="{Binding LastSeenText}" SortMemberPath="LastSeenUtc" Width="95" />
-                            <DataGridTextColumn Header="{l:T Column_Hosts}" Binding="{Binding HostCount}" SortMemberPath="HostCount" Width="55" />
-                            <DataGridTemplateColumn Header="{l:T Column_Actions}" Width="185">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Button Content="{Binding BlockButtonText}" Width="85"
-                                                    Command="{Binding DataContext.ToggleBlockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}" />
-                                            <Button Content="{l:T Button_Hide}" Width="75"
-                                                    Command="{Binding DataContext.HideCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <!-- Barra de ferramentas -->
+                    <WrapPanel Margin="0,0,0,12">
+                        <ComboBox ItemsSource="{Binding Intervals}" SelectedItem="{Binding SelectedInterval}"
+                                  DisplayMemberPath="Label" Width="190" Margin="0,0,10,0" ToolTip="{l:T Toolbar_Interval}" />
+                        <TextBox Style="{StaticResource SearchBox}" Width="260" Margin="0,0,24,0"
+                                 Tag="{l:T Toolbar_SearchPlaceholder}"
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                        <CheckBox Content="{l:T Filter_HideWindows}" IsChecked="{Binding HideWindowsComponents}"
+                                  ToolTip="{l:T Filter_HideWindows_Tooltip}" Margin="0,0,20,0" />
+                        <CheckBox Content="{l:T Filter_HideMicrosoft}" IsChecked="{Binding HideMicrosoftApps}"
+                                  ToolTip="{l:T Filter_HideMicrosoft_Tooltip}" />
+                    </WrapPanel>
 
-                    <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" Background="#E5E7EB" />
-
-                    <!-- Detalhes do app selecionado -->
-                    <DockPanel Grid.Row="2" Background="White">
-                        <StackPanel DockPanel.Dock="Top" Margin="10,6">
-                            <TextBlock FontWeight="SemiBold">
-                                <Run Text="{l:T Details_ConnectionsOf}" /><Run Text="{Binding SelectedRow.DisplayName, Mode=OneWay}" />
-                            </TextBlock>
-                            <TextBlock Foreground="{StaticResource Muted}" FontSize="11" TextTrimming="CharacterEllipsis">
-                                <Run Text="{Binding SelectedRow.ExePath, Mode=OneWay}" /><Run Text="{l:T Details_Pids}" /><Run Text="{Binding SelectedRow.PidsText, Mode=OneWay}" />
-                            </TextBlock>
-                        </StackPanel>
-                        <DataGrid ItemsSource="{Binding SelectedRow.Hosts}" RowHeight="24">
+                    <!-- Lista de aplicativos -->
+                    <Border Grid.Row="1" Style="{StaticResource Card}" Padding="1">
+                        <DataGrid x:Name="ActivityGrid" ItemsSource="{Binding ActivityRows}" SelectedItem="{Binding SelectedRow}">
+                            <DataGrid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="{l:T Menu_ToggleBlock}" Command="{Binding ToggleBlockCommand}" CommandParameter="{Binding SelectedRow}" />
+                                    <MenuItem Header="{l:T Menu_Hide}" Command="{Binding HideCommand}" CommandParameter="{Binding SelectedRow}" />
+                                    <Separator />
+                                    <MenuItem Header="{l:T Menu_OpenLocation}" Command="{Binding OpenLocationCommand}" CommandParameter="{Binding SelectedRow}" />
+                                    <MenuItem Header="{l:T Menu_CopyPath}" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedRow}" />
+                                </ContextMenu>
+                            </DataGrid.ContextMenu>
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="{l:T Column_Host}" Binding="{Binding HostName}" Width="*" />
-                                <DataGridTextColumn Header="{l:T Column_Ip}" Binding="{Binding Address}" Width="220" />
-                                <DataGridTextColumn Header="{l:T Column_Port}" Binding="{Binding Port}" Width="60" />
-                                <DataGridTextColumn Header="{l:T Column_Received}" Binding="{Binding DownloadText}" Width="95" />
-                                <DataGridTextColumn Header="{l:T Column_Sent}" Binding="{Binding UploadText}" Width="95" />
-                                <DataGridTextColumn Header="{l:T Column_LastActivity}" Binding="{Binding LastSeenText}" Width="95" />
+                                <DataGridTemplateColumn Header="{l:T Column_App}" Width="*" MinWidth="220" SortMemberPath="DisplayName" CellTemplate="{StaticResource AppCell}" />
+                                <DataGridTextColumn Header="{l:T Column_Download}" Binding="{Binding DownloadText}" SortMemberPath="Download" Width="100" />
+                                <DataGridTextColumn Header="{l:T Column_Upload}" Binding="{Binding UploadText}" SortMemberPath="Upload" Width="100" />
+                                <DataGridTemplateColumn Header="{l:T Column_Total}" SortMemberPath="Total" Width="120" CellTemplate="{StaticResource TotalCell}" />
+                                <DataGridTextColumn Header="{l:T Column_Now}" Binding="{Binding RateText}" SortMemberPath="CurrentRate" Width="170" />
+                                <DataGridTextColumn Header="{l:T Column_LastActivity}" Binding="{Binding LastSeenText}" SortMemberPath="LastSeenUtc" Width="105" />
+                                <DataGridTextColumn Header="{l:T Column_Hosts}" Binding="{Binding HostCount}" SortMemberPath="HostCount" Width="65" />
+                                <DataGridTemplateColumn Header="{l:T Column_Actions}" Width="200">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Style="{StaticResource BlockButton}" Content="{Binding BlockButtonText}"
+                                                        Command="{Binding DataContext.ToggleBlockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}" />
+                                                <Button Style="{StaticResource RowButton}" Content="{l:T Button_Hide}"
+                                                        Command="{Binding DataContext.HideCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
-                    </DockPanel>
+                    </Border>
+
+                    <GridSplitter Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+
+                    <!-- Detalhes do app selecionado -->
+                    <Border Grid.Row="3" Style="{StaticResource Card}" Padding="1">
+                        <Grid>
+                            <DockPanel>
+                                <DockPanel.Style>
+                                    <Style TargetType="DockPanel">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedRow}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DockPanel.Style>
+                                <StackPanel DockPanel.Dock="Top" Margin="16,12,16,10">
+                                    <TextBlock Style="{StaticResource CardTitle}">
+                                        <Run Text="{l:T Details_ConnectionsOf}" /><Run Text="{Binding SelectedRow.DisplayName, Mode=OneWay}" />
+                                    </TextBlock>
+                                    <TextBlock Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Margin="0,2,0,0">
+                                        <Run Text="{Binding SelectedRow.ExePath, Mode=OneWay}" /><Run Text="{l:T Details_Pids}" /><Run Text="{Binding SelectedRow.PidsText, Mode=OneWay}" />
+                                    </TextBlock>
+                                </StackPanel>
+                                <DataGrid ItemsSource="{Binding SelectedRow.Hosts}" RowHeight="32">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="{l:T Column_Host}" Binding="{Binding HostName}" Width="*" />
+                                        <DataGridTextColumn Header="{l:T Column_Ip}" Binding="{Binding Address}" Width="230" />
+                                        <DataGridTextColumn Header="{l:T Column_Port}" Binding="{Binding Port}" Width="70" />
+                                        <DataGridTextColumn Header="{l:T Column_Received}" Binding="{Binding DownloadText}" Width="105" />
+                                        <DataGridTextColumn Header="{l:T Column_Sent}" Binding="{Binding UploadText}" Width="105" />
+                                        <DataGridTextColumn Header="{l:T Column_LastActivity}" Binding="{Binding LastSeenText}" Width="105" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedRow}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE774;" FontSize="26" Foreground="{StaticResource BorderStrongBrush}"
+                                           HorizontalAlignment="Center" Margin="0,0,0,8" />
+                                <TextBlock Text="{l:T Details_Empty}" Style="{StaticResource Caption}" TextAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                 </Grid>
             </TabItem>
 
             <!-- ================= BLOQUEADOS ================= -->
             <TabItem Header="{Binding BlockedTabHeader}">
-                <DockPanel>
-                    <Border DockPanel.Dock="Top" Padding="10,8" Background="White">
-                        <DockPanel>
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <Button Content="{l:T Blocked_OpenFirewall}" Command="{Binding OpenFirewallCommand}" />
-                                <Button Content="{l:T Blocked_UnblockAll}" Command="{Binding UnblockAllCommand}" />
-                            </StackPanel>
-                            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Muted}" VerticalAlignment="Center"
-                                       Text="{l:T Blocked_Hint}" />
-                        </DockPanel>
+                <DockPanel Margin="20,14,20,16">
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xEA18;" Foreground="{StaticResource Accent}" Margin="0,0,10,0" />
+                            <TextBlock Text="{l:T Blocked_Hint}" Style="{StaticResource Caption}" VerticalAlignment="Center" MaxWidth="760" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="{l:T Blocked_OpenFirewall}" Command="{Binding OpenFirewallCommand}" Margin="0,0,8,0" />
+                            <Button Content="{l:T Blocked_UnblockAll}" Command="{Binding UnblockAllCommand}" Style="{StaticResource AccentButton}" />
+                        </StackPanel>
+                    </Grid>
+                    <Border Style="{StaticResource Card}" Padding="1">
+                        <DataGrid ItemsSource="{Binding BlockedRows}">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="{l:T Column_App}" Width="*" SortMemberPath="DisplayName">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Width="32" Height="32" CornerRadius="8" Background="{StaticResource SurfaceAltBrush}"
+                                                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="0,0,10,0">
+                                                    <Grid>
+                                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE774;" Foreground="{StaticResource Muted}" HorizontalAlignment="Center" />
+                                                        <Image Source="{Binding Icon}" Width="20" Height="20" />
+                                                    </Grid>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding ExePath}" FontSize="11.5" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="{l:T Column_Service}" Binding="{Binding Service}" Width="170" />
+                                <DataGridTextColumn Header="{l:T Column_BlockedAt}" Binding="{Binding BlockedAtText}" Width="140" />
+                                <DataGridTemplateColumn Header="" Width="130">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{l:T Button_Unblock}" Style="{StaticResource RowButton}"
+                                                    Foreground="{StaticResource SuccessBrush}" BorderBrush="{StaticResource SuccessBorderBrush}"
+                                                    Command="{Binding DataContext.UnblockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
                     </Border>
-                    <DataGrid ItemsSource="{Binding BlockedRows}">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="{l:T Column_App}" Width="*" SortMemberPath="DisplayName">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Image Source="{Binding Icon}" Width="20" Height="20" Margin="4,0,8,0" />
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding ExePath}" FontSize="11" Foreground="{StaticResource Muted}" />
-                                            </StackPanel>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="{l:T Column_Service}" Binding="{Binding Service}" Width="160" />
-                            <DataGridTextColumn Header="{l:T Column_BlockedAt}" Binding="{Binding BlockedAtText}" Width="130" />
-                            <DataGridTemplateColumn Header="" Width="120">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="{l:T Button_Unblock}" VerticalAlignment="Center"
-                                                Command="{Binding DataContext.UnblockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
                 </DockPanel>
             </TabItem>
 
             <!-- ================= OCULTOS ================= -->
             <TabItem Header="{Binding HiddenTabHeader}">
-                <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Margin="10,8" Foreground="{StaticResource Muted}" TextWrapping="Wrap"
-                               Text="{l:T Hidden_Hint}" />
-                    <DataGrid ItemsSource="{Binding HiddenRows}" SelectedItem="{Binding SelectedRow}">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="{l:T Column_App}" Width="*" SortMemberPath="DisplayName" CellTemplate="{StaticResource AppCell}" />
-                            <DataGridTextColumn Header="{l:T Column_Download}" Binding="{Binding DownloadText}" SortMemberPath="Download" Width="95" />
-                            <DataGridTextColumn Header="{l:T Column_Upload}" Binding="{Binding UploadText}" SortMemberPath="Upload" Width="95" />
-                            <DataGridTemplateColumn Header="{l:T Column_Total}" SortMemberPath="Total" Width="110" CellTemplate="{StaticResource TotalCell}" />
-                            <DataGridTextColumn Header="{l:T Column_LastActivity}" Binding="{Binding LastSeenText}" SortMemberPath="LastSeenUtc" Width="95" />
-                            <DataGridTemplateColumn Header="{l:T Column_Actions}" Width="250">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Button Content="{l:T Button_Unhide}" Width="130"
-                                                    Command="{Binding DataContext.UnhideCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}" />
-                                            <Button Content="{Binding BlockButtonText}" Width="95"
-                                                    Command="{Binding DataContext.ToggleBlockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                <DockPanel Margin="20,14,20,16">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE946;" Foreground="{StaticResource Accent}" Margin="0,0,10,0" />
+                        <TextBlock Text="{l:T Hidden_Hint}" Style="{StaticResource Caption}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Border Style="{StaticResource Card}" Padding="1">
+                        <DataGrid ItemsSource="{Binding HiddenRows}" SelectedItem="{Binding SelectedRow}">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="{l:T Column_App}" Width="*" MinWidth="220" SortMemberPath="DisplayName" CellTemplate="{StaticResource AppCell}" />
+                                <DataGridTextColumn Header="{l:T Column_Download}" Binding="{Binding DownloadText}" SortMemberPath="Download" Width="100" />
+                                <DataGridTextColumn Header="{l:T Column_Upload}" Binding="{Binding UploadText}" SortMemberPath="Upload" Width="100" />
+                                <DataGridTemplateColumn Header="{l:T Column_Total}" SortMemberPath="Total" Width="120" CellTemplate="{StaticResource TotalCell}" />
+                                <DataGridTextColumn Header="{l:T Column_LastActivity}" Binding="{Binding LastSeenText}" SortMemberPath="LastSeenUtc" Width="105" />
+                                <DataGridTemplateColumn Header="{l:T Column_Actions}" Width="260">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Style="{StaticResource RowButton}" Content="{l:T Button_Unhide}"
+                                                        Command="{Binding DataContext.UnhideCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}" />
+                                                <Button Style="{StaticResource BlockButton}" Content="{Binding BlockButtonText}"
+                                                        Command="{Binding DataContext.ToggleBlockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
                 </DockPanel>
             </TabItem>
 
             <!-- ================= CONFIGURAÇÕES ================= -->
-            <TabItem Header="{l:T Tab_Settings}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="White">
-                    <StackPanel Margin="20,14" MaxWidth="760" HorizontalAlignment="Left">
-                        <StackPanel.Resources>
-                            <Style x:Key="Section" TargetType="TextBlock">
-                                <Setter Property="FontSize" Value="15" />
-                                <Setter Property="FontWeight" Value="SemiBold" />
-                                <Setter Property="Margin" Value="0,14,0,6" />
-                            </Style>
-                            <Style x:Key="Hint" TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="{StaticResource Muted}" />
-                                <Setter Property="FontSize" Value="12" />
-                                <Setter Property="TextWrapping" Value="Wrap" />
-                                <Setter Property="Margin" Value="22,2,0,6" />
-                            </Style>
-                            <Style TargetType="CheckBox">
-                                <Setter Property="Margin" Value="0,4" />
-                            </Style>
-                        </StackPanel.Resources>
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{l:T Tab_Settings}" />
+                        <!-- pontinho azul quando há atualização -->
+                        <Ellipse Width="7" Height="7" Fill="{StaticResource Accent}" Margin="6,1,0,0" VerticalAlignment="Center"
+                                 Visibility="{Binding UpdateAvailable, Converter={StaticResource BoolToVis}}" />
+                    </StackPanel>
+                </TabItem.Header>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="20,16,20,24" MaxWidth="860" HorizontalAlignment="Left">
 
-                        <TextBlock Text="{l:T Settings_Startup}" Style="{StaticResource Section}" Margin="0,0,0,6" />
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{l:T Settings_StartWithWindows}" VerticalAlignment="Center" Margin="0,0,12,0" />
-                            <RadioButton Content="{l:T Common_Yes}" GroupName="Startup" IsChecked="{Binding StartWithWindows}" Margin="0,0,16,0" />
-                            <RadioButton Content="{l:T Common_No}" GroupName="Startup" IsChecked="{Binding NotStartWithWindows}" />
-                        </StackPanel>
-                        <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,6"
-                                   Text="{l:T Settings_StartWithWindows_Hint}" />
-                        <CheckBox Content="{l:T Settings_MinimizeToTray}" IsChecked="{Binding MinimizeToTray}" />
+                        <!-- Inicialização -->
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                            <StackPanel>
+                                <StackPanel Style="{StaticResource SettingCardHeader}">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE7E8;" Foreground="{StaticResource Accent}" Margin="0,0,10,0" />
+                                    <TextBlock Text="{l:T Settings_Startup}" Style="{StaticResource CardTitle}" />
+                                </StackPanel>
+                                <Border Style="{StaticResource SettingRow}">
+                                    <DockPanel>
+                                        <Border DockPanel.Dock="Right" Background="{StaticResource SurfaceAltBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                                BorderThickness="1" CornerRadius="8" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <RadioButton Style="{StaticResource SegmentRadio}" Content="{l:T Common_Yes}" GroupName="Startup" IsChecked="{Binding StartWithWindows}" />
+                                                <RadioButton Style="{StaticResource SegmentRadio}" Content="{l:T Common_No}" GroupName="Startup" IsChecked="{Binding NotStartWithWindows}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <StackPanel>
+                                            <TextBlock Text="{l:T Settings_StartWithWindows}" Style="{StaticResource SettingTitle}" />
+                                            <TextBlock Text="{l:T Settings_StartWithWindows_Hint}" Style="{StaticResource SettingHint}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource SettingRow}">
+                                    <DockPanel>
+                                        <CheckBox DockPanel.Dock="Right" IsChecked="{Binding MinimizeToTray}" />
+                                        <TextBlock Text="{l:T Settings_MinimizeToTray}" Style="{StaticResource SettingTitle}" VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
 
-                        <TextBlock Text="{l:T Settings_Alerts}" Style="{StaticResource Section}" />
-                        <CheckBox Content="{l:T Settings_AlertsEnabled}" IsChecked="{Binding AlertsEnabled}" />
-                        <StackPanel Orientation="Horizontal" Margin="22,4,0,0" IsEnabled="{Binding AlertsEnabled}">
-                            <TextBlock Text="{l:T Settings_AlertWhenOver}" VerticalAlignment="Center" />
-                            <TextBox Text="{Binding AlertThresholdMb, UpdateSourceTrigger=LostFocus}" Width="70" Margin="6,0"
-                                     VerticalContentAlignment="Center" HorizontalContentAlignment="Right" />
-                            <TextBlock Text="{l:T Settings_AlertMbIn}" VerticalAlignment="Center" />
-                            <ComboBox ItemsSource="{Binding Intervals}" SelectedItem="{Binding SelectedAlertWindow}"
-                                      DisplayMemberPath="Label" Width="160" Margin="6,0" />
-                        </StackPanel>
-                        <CheckBox Content="{l:T Settings_AlertIncludeHidden}" IsChecked="{Binding AlertIncludeHidden}"
-                                  Margin="22,8,0,0" IsEnabled="{Binding AlertsEnabled}" />
-                        <TextBlock Style="{StaticResource Hint}"
-                                   Text="{l:T Settings_Alerts_Hint}" />
-                        <Button Content="{l:T Settings_TestNotification}" HorizontalAlignment="Left" Margin="22,0,0,0" Command="{Binding TestNotificationCommand}" />
+                        <!-- Atualizações -->
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                            <StackPanel>
+                                <StackPanel Style="{StaticResource SettingCardHeader}">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE895;" Foreground="{StaticResource Accent}" Margin="0,0,10,0" />
+                                    <TextBlock Text="{l:T Settings_Updates}" Style="{StaticResource CardTitle}" />
+                                </StackPanel>
+                                <Border Style="{StaticResource SettingRow}">
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Content="{l:T Settings_ReleaseNotes}" Command="{Binding OpenReleasePageCommand}" Margin="0,0,8,0" />
+                                            <Button Content="{l:T Settings_CheckNow}" Command="{Binding CheckUpdatesCommand}" Margin="0,0,8,0" />
+                                            <Button Content="{l:T Settings_InstallUpdate}" Command="{Binding InstallUpdateCommand}" Style="{StaticResource AccentButton}"
+                                                    Visibility="{Binding UpdateAvailable, Converter={StaticResource BoolToVis}}" />
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding VersionText}" Style="{StaticResource SettingTitle}" />
+                                            <TextBlock Text="{Binding UpdateStatusText}" Style="{StaticResource SettingHint}" />
+                                            <ProgressBar Value="{Binding UpdateProgress, Mode=OneWay}" Maximum="1" Margin="0,8,24,0"
+                                                         Visibility="{Binding IsInstallingUpdate, Converter={StaticResource BoolToVis}}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource SettingRow}">
+                                    <DockPanel>
+                                        <CheckBox DockPanel.Dock="Right" IsChecked="{Binding CheckUpdatesOnStartup}" />
+                                        <StackPanel>
+                                            <TextBlock Text="{l:T Settings_CheckOnStartup}" Style="{StaticResource SettingTitle}" />
+                                            <TextBlock Text="{l:T Settings_Updates_Hint}" Style="{StaticResource SettingHint}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
 
-                        <TextBlock Text="{l:T Settings_Blocking}" Style="{StaticResource Section}" />
-                        <CheckBox Content="{l:T Settings_CloseConnections}" IsChecked="{Binding CloseConnectionsOnBlock}" />
-                        <TextBlock Style="{StaticResource Hint}"
-                                   Text="{l:T Settings_CloseConnections_Hint}" />
+                        <!-- Alertas -->
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                            <StackPanel>
+                                <StackPanel Style="{StaticResource SettingCardHeader}">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xEA8F;" Foreground="{StaticResource Accent}" Margin="0,0,10,0" />
+                                    <TextBlock Text="{l:T Settings_Alerts}" Style="{StaticResource CardTitle}" />
+                                </StackPanel>
+                                <Border Style="{StaticResource SettingRow}">
+                                    <DockPanel>
+                                        <CheckBox DockPanel.Dock="Right" IsChecked="{Binding AlertsEnabled}" />
+                                        <StackPanel>
+                                            <TextBlock Text="{l:T Settings_AlertsEnabled}" Style="{StaticResource SettingTitle}" />
+                                            <TextBlock Text="{l:T Settings_Alerts_Hint}" Style="{StaticResource SettingHint}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource SettingRow}" IsEnabled="{Binding AlertsEnabled}">
+                                    <WrapPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{l:T Settings_AlertWhenOver}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                                        <TextBox Text="{Binding AlertThresholdMb, UpdateSourceTrigger=LostFocus}" Width="80" Margin="10,0"
+                                                 HorizontalContentAlignment="Right" />
+                                        <TextBlock Text="{l:T Settings_AlertMbIn}" VerticalAlignment="Center" FontWeight="SemiBold" />
+                                        <ComboBox ItemsSource="{Binding Intervals}" SelectedItem="{Binding SelectedAlertWindow}"
+                                                  DisplayMemberPath="Label" Width="190" Margin="10,0" />
+                                    </WrapPanel>
+                                </Border>
+                                <Border Style="{StaticResource SettingRow}" IsEnabled="{Binding AlertsEnabled}">
+                                    <DockPanel>
+                                        <CheckBox DockPanel.Dock="Right" IsChecked="{Binding AlertIncludeHidden}" />
+                                        <Button DockPanel.Dock="Right" Content="{l:T Settings_TestNotification}" Command="{Binding TestNotificationCommand}" Margin="0,0,16,0" />
+                                        <TextBlock Text="{l:T Settings_AlertIncludeHidden}" Style="{StaticResource SettingTitle}" VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
 
-                        <TextBlock Text="{l:T Settings_Display}" Style="{StaticResource Section}" />
-                        <CheckBox Content="{l:T Filter_HideWindows}" IsChecked="{Binding HideWindowsComponents}" />
-                        <CheckBox Content="{l:T Filter_HideMicrosoft}" IsChecked="{Binding HideMicrosoftApps}" />
+                        <!-- Bloqueio -->
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                            <StackPanel>
+                                <StackPanel Style="{StaticResource SettingCardHeader}">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xEA18;" Foreground="{StaticResource Accent}" Margin="0,0,10,0" />
+                                    <TextBlock Text="{l:T Settings_Blocking}" Style="{StaticResource CardTitle}" />
+                                </StackPanel>
+                                <Border Style="{StaticResource SettingRow}">
+                                    <DockPanel>
+                                        <CheckBox DockPanel.Dock="Right" IsChecked="{Binding CloseConnectionsOnBlock}" />
+                                        <StackPanel>
+                                            <TextBlock Text="{l:T Settings_CloseConnections}" Style="{StaticResource SettingTitle}" />
+                                            <TextBlock Text="{l:T Settings_CloseConnections_Hint}" Style="{StaticResource SettingHint}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <TextBlock Text="{l:T Settings_Language}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <ComboBox ItemsSource="{Binding Languages}" SelectedValue="{Binding LanguageCode}"
-                                      SelectedValuePath="Code" DisplayMemberPath="Name" Width="200" />
-                        </StackPanel>
+                        <!-- Exibição -->
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                            <StackPanel>
+                                <StackPanel Style="{StaticResource SettingCardHeader}">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE7B3;" Foreground="{StaticResource Accent}" Margin="0,0,10,0" />
+                                    <TextBlock Text="{l:T Settings_Display}" Style="{StaticResource CardTitle}" />
+                                </StackPanel>
+                                <Border Style="{StaticResource SettingRow}">
+                                    <DockPanel>
+                                        <CheckBox DockPanel.Dock="Right" IsChecked="{Binding HideWindowsComponents}" />
+                                        <StackPanel>
+                                            <TextBlock Text="{l:T Filter_HideWindows}" Style="{StaticResource SettingTitle}" />
+                                            <TextBlock Text="{l:T Filter_HideWindows_Tooltip}" Style="{StaticResource SettingHint}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource SettingRow}">
+                                    <DockPanel>
+                                        <CheckBox DockPanel.Dock="Right" IsChecked="{Binding HideMicrosoftApps}" />
+                                        <StackPanel>
+                                            <TextBlock Text="{l:T Filter_HideMicrosoft}" Style="{StaticResource SettingTitle}" />
+                                            <TextBlock Text="{l:T Filter_HideMicrosoft_Tooltip}" Style="{StaticResource SettingHint}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource SettingRow}">
+                                    <DockPanel>
+                                        <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding Languages}" SelectedValue="{Binding LanguageCode}"
+                                                  SelectedValuePath="Code" DisplayMemberPath="Name" Width="200" />
+                                        <TextBlock Text="{l:T Settings_Language}" Style="{StaticResource SettingTitle}" VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
 
-                        <TextBlock Text="{l:T Settings_About}" Style="{StaticResource Section}" />
-                        <TextBlock Text="{Binding VersionText}" />
-                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBlock Text="{l:T Settings_FileLocation}" Foreground="{StaticResource Muted}" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding SettingsFilePath}" Foreground="{StaticResource Muted}" VerticalAlignment="Center" />
-                            <Button Content="{l:T Settings_OpenFolder}" Margin="8,0,0,0" Command="{Binding OpenSettingsFolderCommand}" />
-                        </StackPanel>
+                        <!-- Sobre -->
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <StackPanel Style="{StaticResource SettingCardHeader}">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE946;" Foreground="{StaticResource Accent}" Margin="0,0,10,0" />
+                                    <TextBlock Text="{l:T Settings_About}" Style="{StaticResource CardTitle}" />
+                                </StackPanel>
+                                <Border Style="{StaticResource SettingRow}">
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Content="{l:T Settings_OpenFolder}" Command="{Binding OpenSettingsFolderCommand}" VerticalAlignment="Center" />
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding VersionText}" Style="{StaticResource SettingTitle}" />
+                                            <TextBlock Style="{StaticResource SettingHint}">
+                                                <Run Text="{l:T Settings_FileLocation}" /><Run Text="{Binding SettingsFilePath, Mode=OneWay}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

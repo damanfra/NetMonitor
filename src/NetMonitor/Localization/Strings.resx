@@ -139,6 +139,9 @@ Executável: {1}</value>
   <data name="Details_ConnectionsOf" xml:space="preserve">
     <value>Conexões de: </value>
   </data>
+  <data name="Details_Empty" xml:space="preserve">
+    <value>Selecione um aplicativo para ver com quais servidores ele está conversando.</value>
+  </data>
   <data name="Details_Pids" xml:space="preserve">
     <value>   PIDs: </value>
   </data>
@@ -265,6 +268,12 @@ Executável: {1}</value>
   <data name="Settings_Blocking" xml:space="preserve">
     <value>Bloqueio</value>
   </data>
+  <data name="Settings_CheckNow" xml:space="preserve">
+    <value>Verificar agora</value>
+  </data>
+  <data name="Settings_CheckOnStartup" xml:space="preserve">
+    <value>Procurar atualizações ao iniciar</value>
+  </data>
   <data name="Settings_CloseConnections" xml:space="preserve">
     <value>Ao bloquear, derrubar as conexões que o app já tem abertas</value>
   </data>
@@ -277,8 +286,11 @@ Executável: {1}</value>
   <data name="Settings_FileLocation" xml:space="preserve">
     <value>Configurações em: </value>
   </data>
+  <data name="Settings_InstallUpdate" xml:space="preserve">
+    <value>Atualizar agora</value>
+  </data>
   <data name="Settings_Language" xml:space="preserve">
-    <value>Idioma:</value>
+    <value>Idioma</value>
   </data>
   <data name="Settings_MinimizeToTray" xml:space="preserve">
     <value>Ao minimizar, ir para a bandeja do sistema (continua monitorando)</value>
@@ -286,8 +298,11 @@ Executável: {1}</value>
   <data name="Settings_OpenFolder" xml:space="preserve">
     <value>Abrir pasta</value>
   </data>
+  <data name="Settings_ReleaseNotes" xml:space="preserve">
+    <value>Ver novidades</value>
+  </data>
   <data name="Settings_StartWithWindows" xml:space="preserve">
-    <value>Iniciar com o Windows:</value>
+    <value>Iniciar com o Windows</value>
   </data>
   <data name="Settings_StartWithWindows_Hint" xml:space="preserve">
     <value>Cria uma tarefa no Agendador de Tarefas ("NetMonitor") que abre o programa minimizado na bandeja ao entrar no Windows, já como Administrador e sem pedir confirmação do UAC.</value>
@@ -295,14 +310,32 @@ Executável: {1}</value>
   <data name="Settings_Startup" xml:space="preserve">
     <value>Inicialização</value>
   </data>
+  <data name="Settings_Subtitle" xml:space="preserve">
+    <value>Preferências do NetMonitor</value>
+  </data>
   <data name="Settings_TestNotification" xml:space="preserve">
     <value>Testar notificação</value>
+  </data>
+  <data name="Settings_Updates" xml:space="preserve">
+    <value>Atualizações</value>
+  </data>
+  <data name="Settings_Updates_Hint" xml:space="preserve">
+    <value>As versões são publicadas em github.com/damanfra/NetMonitor (Releases). A atualização baixa o novo NetMonitor.exe, confere a integridade e reinicia o programa no mesmo lugar.</value>
   </data>
   <data name="Settings_Version" xml:space="preserve">
     <value>Versão {0}</value>
   </data>
   <data name="Startup_TaskDescription" xml:space="preserve">
     <value>Inicia o NetMonitor minimizado na bandeja ao entrar no Windows.</value>
+  </data>
+  <data name="Stat_Download" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="Stat_Now" xml:space="preserve">
+    <value>Agora</value>
+  </data>
+  <data name="Stat_Upload" xml:space="preserve">
+    <value>Upload</value>
   </data>
   <data name="Status_AllUnblocked" xml:space="preserve">
     <value>Todos os bloqueios foram removidos.</value>
@@ -346,8 +379,14 @@ Executável: {1}</value>
   <data name="Tab_Settings" xml:space="preserve">
     <value>Configurações</value>
   </data>
+  <data name="Toolbar_Interval" xml:space="preserve">
+    <value>Período</value>
+  </data>
   <data name="Toolbar_Search" xml:space="preserve">
     <value>Buscar:</value>
+  </data>
+  <data name="Toolbar_SearchPlaceholder" xml:space="preserve">
+    <value>Buscar aplicativo…</value>
   </data>
   <data name="Toolbar_ShowActivity" xml:space="preserve">
     <value>Mostrar atividade de:</value>
@@ -361,7 +400,45 @@ Executável: {1}</value>
   <data name="UnblockAll_Confirm" xml:space="preserve">
     <value>Remover o bloqueio de todos os {0} aplicativo(s)?</value>
   </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>A versão {0} está disponível.</value>
+  </data>
+  <data name="Update_Badge" xml:space="preserve">
+    <value>Nova versão v{0}</value>
+  </data>
+  <data name="Update_CheckFailed" xml:space="preserve">
+    <value>Não foi possível verificar atualizações: {0}</value>
+  </data>
+  <data name="Update_Checking" xml:space="preserve">
+    <value>Procurando atualizações…</value>
+  </data>
+  <data name="Update_Confirm" xml:space="preserve">
+    <value>Baixar e instalar a versão {0} agora?
+
+O NetMonitor será fechado e reaberto automaticamente. O histórico de tráfego da sessão atual será perdido; bloqueios e configurações são mantidos.</value>
+  </data>
+  <data name="Update_ConfirmTitle" xml:space="preserve">
+    <value>Atualizar NetMonitor</value>
+  </data>
+  <data name="Update_Downloading" xml:space="preserve">
+    <value>Baixando atualização…</value>
+  </data>
+  <data name="Update_DownloadingPercent" xml:space="preserve">
+    <value>Baixando atualização… {0:P0}</value>
+  </data>
+  <data name="Update_ErrorHash" xml:space="preserve">
+    <value>o arquivo baixado não confere com o SHA-256 publicado.</value>
+  </data>
+  <data name="Update_ErrorSize" xml:space="preserve">
+    <value>o arquivo baixado tem tamanho inesperado ({0} bytes em vez de {1}).</value>
+  </data>
+  <data name="Update_InstallFailed" xml:space="preserve">
+    <value>Falha ao instalar a atualização: {0}</value>
+  </data>
+  <data name="Update_UpToDate" xml:space="preserve">
+    <value>Você está usando a versão mais recente (verificado às {0:HH:mm}).</value>
+  </data>
   <data name="Window_Title" xml:space="preserve">
-    <value>NetMonitor — tráfego de rede por aplicativo</value>
+    <value>NetMonitor - v{0}</value>
   </data>
 </root>

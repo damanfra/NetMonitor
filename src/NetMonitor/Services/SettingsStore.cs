@@ -29,6 +29,9 @@ namespace NetMonitor.Services
         public int AlertThresholdMb { get; set; } = 100;
         public int AlertWindowMinutes { get; set; } = 5;
         public bool AlertIncludeHidden { get; set; }
+
+        /// <summary>Procurar nova versão no GitHub a cada inicialização.</summary>
+        public bool CheckUpdatesOnStartup { get; set; } = true;
         public List<HiddenApp> HiddenApps { get; set; } = new();
     }
 

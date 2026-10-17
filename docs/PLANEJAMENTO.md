@@ -22,6 +22,10 @@ Interface mais simples que o GlassWire, sem limites de versão "Premium".
 | R10 | Filtros de Windows/Microsoft ligados por padrão | ✅ v0.2 |
 | R11 | Build automático na `main` gerando .exe com .NET 8 embutido | ✅ v0.2 (GitHub Actions + Release) |
 | R12 | Interface só em pt-BR por enquanto, pronta para inglês no futuro | ✅ v0.3 (textos em `.resx`) |
+| R13 | Ícone próprio que represente o objetivo do software | ✅ v0.4 (escudo + setas ↓↑) |
+| R14 | Versão na barra de título: "NetMonitor - vX.Y.Z" | ✅ v0.4 |
+| R15 | Verificar/instalar atualizações (aba Configurações + checagem ao iniciar, aviso discreto) | ✅ v0.4 (GitHub Releases) |
+| R16 | Visual moderno (sem "cara de Windows 95") mantendo a organização das telas | ✅ v0.4 (tema Fluent claro) |
 
 ## 2. Decisões técnicas
 
@@ -78,6 +82,19 @@ Interface mais simples que o GlassWire, sem limites de versão "Premium".
   assembly; extraindo tudo, os caminhos funcionam como numa instalação normal.
 - Push na `main` → Release `v1.0.<número da execução>` com o .exe anexado.
 
+### 2.6.1 Auto-atualização
+- Fonte: `GET https://api.github.com/repos/damanfra/NetMonitor/releases/latest` (repositório público,
+  sem token). Compara `tag_name` (`v1.0.N`) com a versão do assembly (definida pela Action).
+- Checagem automática 5 s após abrir (opção "Procurar atualizações ao iniciar", ligada por padrão);
+  falhas são silenciosas (só aparecem na aba Configurações).
+- Aviso **discreto**: pílula "Nova versão vX" no canto do cabeçalho + pontinho azul na aba
+  Configurações. Nada de pop-up.
+- Instalação: baixa `NetMonitor.exe` para `NetMonitor.new.exe` na mesma pasta, confere tamanho e
+  SHA-256 (campo `digest` do asset no GitHub), renomeia o exe em uso para `.old` (Windows permite),
+  move o novo para o lugar e o inicia com `--updated`. O novo processo espera o mutex de instância
+  única (até 30 s) antes de iniciar o ETW, e apaga o `.old`.
+- Bloqueios (regras de firewall) e configurações sobrevivem à atualização; o histórico em memória não.
+
 ### 2.7 Identidade de um "aplicativo"
 - Chave = caminho do executável em minúsculas.
 - `svchost.exe` = caminho + lista de serviços hospedados naquele PID (via WMI `Win32_Service`).
@@ -93,7 +110,16 @@ Interface mais simples que o GlassWire, sem limites de versão "Premium".
 - Hosts por app: totais acumulados desde que o NetMonitor iniciou, filtrados pela última atividade
   dentro do intervalo (por isso as colunas têm `*`).
 
-### 2.9 Idiomas (i18n)
+### 2.9 Visual
+- Tema "Fluent" claro em `Themes/Theme.xaml` (cores, botões, abas com sublinhado, tabela sem grade,
+  ComboBox, interruptores no lugar de caixas de seleção, segmentado Sim/Não, barras de rolagem finas,
+  dicas e menus arredondados). A janela só usa estilos/chaves desse dicionário, então um tema escuro
+  futuro é outro dicionário com as mesmas chaves.
+- Ícones de interface: fonte Segoe Fluent Icons (Win11) com fallback para Segoe MDL2 Assets (Win10).
+- Ícone do app: `src/NetMonitor/Assets/NetMonitor.ico`, gerado por `tools/make_icon.py` (Pillow).
+- Configurações em cartões com linhas "título + descrição | controle" (como nas Configurações do Windows 11).
+
+### 2.10 Idiomas (i18n)
 - **Nenhum texto de interface fica no código.** Todos estão em `Localization/Strings.resx`
   (pt-BR, idioma neutro do assembly — `NeutralLanguage=pt-BR`).
 - XAML: `Text="{l:T Chave}"` (markup extension `TExtension`, que gera uma binding para
@@ -129,8 +155,11 @@ src/NetMonitor/
 │   ├── ConnectionKiller.cs    Derruba conexões TCP abertas de PIDs bloqueados
 │   ├── SettingsStore.cs       %APPDATA%\NetMonitor\settings.json
 │   ├── StartupManager.cs      Iniciar com o Windows (tarefa agendada)
+│   ├── UpdateService.cs       Verificar/baixar/aplicar atualizações (GitHub Releases)
 │   ├── IconCache.cs           Ícone do .exe
 │   └── Format.cs              Formatação de bytes/tempo (pt-BR)
+├── Assets/NetMonitor.ico      Ícone (gerado por tools/make_icon.py)
+├── Themes/Theme.xaml          Cores e estilos de todos os controles
 ├── Localization/
 │   ├── Strings.resx           TODOS os textos da interface (pt-BR)
 │   ├── Loc.cs                 Acesso aos textos, idioma atual, lista de idiomas
@@ -143,7 +172,7 @@ Fluxo: `ETW thread → ProcessResolver → TrafficStore.Record()`; a UI, a cada 
 chama `TrafficStore.Query(intervalo)` e sincroniza as linhas (sem recriar, para manter
 seleção e ordenação ao vivo).
 
-## 4. Estado atual (v0.3)
+## 4. Estado atual (v0.4)
 
 - Compila sem erros/avisos (`dotnet build -c Release`). Foi compilado fora do Windows
   (`EnableWindowsTargeting`), **ainda não foi executado em uma máquina Windows real** — o primeiro
@@ -158,7 +187,9 @@ seleção e ordenação ao vivo).
 
 Prioridade alta
 - [ ] Testar em Windows real e corrigir o que aparecer (lista da seção 4).
-- [ ] Ícone próprio do app (`.ico`) para janela/bandeja.
+- [x] Ícone próprio do app (v0.4).
+- [x] Verificar e instalar atualizações pelo próprio app (v0.4).
+- [ ] Testar o fluxo de bloqueio/desbloqueio em uso real (ainda não testado pelo usuário).
 - [ ] Gráfico simples de tráfego total no tempo (como a faixa inferior do GlassWire).
 - [x] Opção "Iniciar com o Windows" (v0.2).
 - [x] Build automático com .exe self-contained (v0.2).
@@ -174,7 +205,7 @@ Prioridade média
 Prioridade baixa
 - [ ] Bloquear apenas um host/IP específico de um app.
 - [ ] Tradução para inglês (`Strings.en.resx`) — infraestrutura pronta desde a v0.3.
-- [ ] Tema escuro.
+- [ ] Tema escuro (estrutura pronta em `Themes/`).
 - [ ] Instalador (MSIX ou Inno Setup).
 - [ ] Assinatura de código do .exe (evitar aviso do SmartScreen).
 

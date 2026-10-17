@@ -9,6 +9,8 @@ Contexto para quem (pessoa ou agente) continuar este projeto.
   `EnableWindowsTargeting`, mas só roda no Windows e **como Administrador**.
 - **Textos de interface nunca ficam no código**: adicione a chave em `src/NetMonitor/Localization/Strings.resx`
   e use `{l:T Chave}` no XAML ou `Loc.T("Chave", args)` no C#. Veja a seção "Idiomas" do planejamento.
+- **Cores e estilos só em `src/NetMonitor/Themes/Theme.xaml`** (use as chaves `…Brush`, `Card`, `AccentButton` etc.);
+  não escreva cores fixas na janela.
 - MVVM sem framework: `ViewModels/ObservableObject.cs` tem `ObservableObject` e `RelayCommand`.
 - Regras de firewall criadas pelo app ficam no grupo `NetMonitor`; nunca mexer em regras fora desse grupo.
 - Ao concluir itens do backlog, marque-os em `docs/PLANEJAMENTO.md`.
