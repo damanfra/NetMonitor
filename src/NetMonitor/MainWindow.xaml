@@ -74,11 +74,7 @@
 
         <!-- Barra de status -->
         <Border DockPanel.Dock="Bottom" Background="White" BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Padding="14,4">
-            <DockPanel>
-                <CheckBox DockPanel.Dock="Right" Content="Ao bloquear, derrubar conexões já abertas"
-                          IsChecked="{Binding CloseConnectionsOnBlock}" />
-                <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource Muted}" />
-            </DockPanel>
+            <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource Muted}" />
         </Border>
 
         <TabControl Margin="10" Padding="0">
@@ -226,6 +222,73 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </DockPanel>
+            </TabItem>
+
+            <!-- ================= CONFIGURAÇÕES ================= -->
+            <TabItem Header="Configurações">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="White">
+                    <StackPanel Margin="20,14" MaxWidth="760" HorizontalAlignment="Left">
+                        <StackPanel.Resources>
+                            <Style x:Key="Section" TargetType="TextBlock">
+                                <Setter Property="FontSize" Value="15" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="Margin" Value="0,14,0,6" />
+                            </Style>
+                            <Style x:Key="Hint" TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource Muted}" />
+                                <Setter Property="FontSize" Value="12" />
+                                <Setter Property="TextWrapping" Value="Wrap" />
+                                <Setter Property="Margin" Value="22,2,0,6" />
+                            </Style>
+                            <Style TargetType="CheckBox">
+                                <Setter Property="Margin" Value="0,4" />
+                            </Style>
+                        </StackPanel.Resources>
+
+                        <TextBlock Text="Inicialização" Style="{StaticResource Section}" Margin="0,0,0,6" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Iniciar com o Windows:" VerticalAlignment="Center" Margin="0,0,12,0" />
+                            <RadioButton Content="Sim" GroupName="Startup" IsChecked="{Binding StartWithWindows}" Margin="0,0,16,0" />
+                            <RadioButton Content="Não" GroupName="Startup" IsChecked="{Binding NotStartWithWindows}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,6"
+                                   Text="Cria uma tarefa no Agendador de Tarefas (&quot;NetMonitor&quot;) que abre o programa minimizado na bandeja ao entrar no Windows, já como Administrador e sem pedir confirmação do UAC." />
+                        <CheckBox Content="Ao minimizar, ir para a bandeja do sistema (continua monitorando)" IsChecked="{Binding MinimizeToTray}" />
+
+                        <TextBlock Text="Alertas de consumo" Style="{StaticResource Section}" />
+                        <CheckBox Content="Avisar quando um aplicativo consumir muito" IsChecked="{Binding AlertsEnabled}" />
+                        <StackPanel Orientation="Horizontal" Margin="22,4,0,0" IsEnabled="{Binding AlertsEnabled}">
+                            <TextBlock Text="Avisar quando um app passar de" VerticalAlignment="Center" />
+                            <TextBox Text="{Binding AlertThresholdMb, UpdateSourceTrigger=LostFocus}" Width="70" Margin="6,0"
+                                     VerticalContentAlignment="Center" HorizontalContentAlignment="Right" />
+                            <TextBlock Text="MB (download + upload) em" VerticalAlignment="Center" />
+                            <ComboBox ItemsSource="{Binding Intervals}" SelectedItem="{Binding SelectedAlertWindow}"
+                                      DisplayMemberPath="Label" Width="160" Margin="6,0" />
+                        </StackPanel>
+                        <CheckBox Content="Incluir apps ocultos nos alertas" IsChecked="{Binding AlertIncludeHidden}"
+                                  Margin="22,8,0,0" IsEnabled="{Binding AlertsEnabled}" />
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="Cada app gera no máximo um aviso por período escolhido. Apps bloqueados não geram aviso. O aviso aparece como notificação do Windows; clique nele para abrir o NetMonitor." />
+                        <Button Content="Testar notificação" HorizontalAlignment="Left" Margin="22,0,0,0" Command="{Binding TestNotificationCommand}" />
+
+                        <TextBlock Text="Bloqueio" Style="{StaticResource Section}" />
+                        <CheckBox Content="Ao bloquear, derrubar as conexões que o app já tem abertas" IsChecked="{Binding CloseConnectionsOnBlock}" />
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="Regras de firewall valem para conexões novas. Com esta opção o bloqueio tem efeito imediato (conexões TCP IPv4)." />
+
+                        <TextBlock Text="Exibição" Style="{StaticResource Section}" />
+                        <CheckBox Content="Ocultar componentes do Windows" IsChecked="{Binding HideWindowsComponents}" />
+                        <CheckBox Content="Ocultar apps da Microsoft" IsChecked="{Binding HideMicrosoftApps}" />
+
+                        <TextBlock Text="Sobre" Style="{StaticResource Section}" />
+                        <TextBlock Text="{Binding VersionText}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="Configurações em: " Foreground="{StaticResource Muted}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding SettingsFilePath}" Foreground="{StaticResource Muted}" VerticalAlignment="Center" />
+                            <Button Content="Abrir pasta" Margin="8,0,0,0" Command="{Binding OpenSettingsFolderCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
     </DockPanel>

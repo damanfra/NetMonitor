@@ -25,6 +25,9 @@ namespace NetMonitor.ViewModels
         private HashSet<string> _blockedIds = new(StringComparer.OrdinalIgnoreCase);
         private DateTime _lastBlockedRefresh = DateTime.MinValue;
         private DateTime _lastPrune = DateTime.UtcNow;
+        private DateTime _lastAlertCheck = DateTime.MinValue;
+        private readonly Dictionary<string, DateTime> _lastAlertByApp = new(StringComparer.OrdinalIgnoreCase);
+        private bool _startWithWindows;
 
         private IntervalOption _selectedInterval;
         private string _searchText = "";
@@ -70,6 +73,12 @@ namespace NetMonitor.ViewModels
             CopyPathCommand = new RelayCommand(p => { if (p is AppRowViewModel { ExePath: { } path }) Clipboard.SetText(path); },
                 p => p is AppRowViewModel { ExePath: not null });
             OpenFirewallCommand = new RelayCommand(_ => Shell("wf.msc"));
+            OpenSettingsFolderCommand = new RelayCommand(_ => Shell(SettingsStore.Folder));
+            TestNotificationCommand = new RelayCommand(_ => NotificationRequested?.Invoke(
+                "NetMonitor — teste", "As notificações de consumo estão funcionando."));
+
+            try { _startWithWindows = StartupManager.IsEnabled(); }
+            catch { _startWithWindows = false; }
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _timer.Tick += (_, _) => Refresh();
@@ -88,6 +97,90 @@ namespace NetMonitor.ViewModels
         public ICommand OpenLocationCommand { get; }
         public ICommand CopyPathCommand { get; }
         public ICommand OpenFirewallCommand { get; }
+        public ICommand OpenSettingsFolderCommand { get; }
+        public ICommand TestNotificationCommand { get; }
+
+        /// <summary>Pedido de notificação na bandeja (título, texto). A janela é quem exibe.</summary>
+        public event Action<string, string>? NotificationRequested;
+
+        public string VersionText => "Versão " + (typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "?");
+        public string SettingsFilePath => SettingsStore.FilePath;
+
+        // ---------- Configurações ----------
+
+        public bool StartWithWindows
+        {
+            get => _startWithWindows;
+            set
+            {
+                if (value == _startWithWindows)
+                    return;
+                try
+                {
+                    if (value) StartupManager.Enable();
+                    else StartupManager.Disable();
+                    _startWithWindows = value;
+                    StatusText = value
+                        ? "O NetMonitor vai iniciar com o Windows (minimizado na bandeja)."
+                        : "O NetMonitor não vai mais iniciar com o Windows.";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Não foi possível alterar a inicialização automática:\n" + ex.Message, "Erro",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                Raise(nameof(StartWithWindows));
+                Raise(nameof(NotStartWithWindows));
+            }
+        }
+
+        public bool NotStartWithWindows
+        {
+            get => !StartWithWindows;
+            set { if (value) StartWithWindows = false; }
+        }
+
+        public bool MinimizeToTray
+        {
+            get => _settings.MinimizeToTray;
+            set { _settings.MinimizeToTray = value; SettingsStore.Save(_settings); Raise(nameof(MinimizeToTray)); }
+        }
+
+        public bool AlertsEnabled
+        {
+            get => _settings.AlertsEnabled;
+            set { _settings.AlertsEnabled = value; SettingsStore.Save(_settings); Raise(nameof(AlertsEnabled)); }
+        }
+
+        public int AlertThresholdMb
+        {
+            get => _settings.AlertThresholdMb;
+            set
+            {
+                _settings.AlertThresholdMb = Math.Max(1, value);
+                SettingsStore.Save(_settings);
+                _lastAlertByApp.Clear();
+                Raise(nameof(AlertThresholdMb));
+            }
+        }
+
+        public IntervalOption SelectedAlertWindow
+        {
+            get => Intervals.FirstOrDefault(i => i.Minutes == _settings.AlertWindowMinutes) ?? Intervals[1];
+            set
+            {
+                _settings.AlertWindowMinutes = value.Minutes;
+                SettingsStore.Save(_settings);
+                _lastAlertByApp.Clear();
+                Raise(nameof(SelectedAlertWindow));
+            }
+        }
+
+        public bool AlertIncludeHidden
+        {
+            get => _settings.AlertIncludeHidden;
+            set { _settings.AlertIncludeHidden = value; SettingsStore.Save(_settings); Raise(nameof(AlertIncludeHidden)); }
+        }
 
         public IntervalOption SelectedInterval
         {
@@ -225,9 +318,44 @@ namespace NetMonitor.ViewModels
                 row.IsBlocked = _blockedIds.Contains(id);
             }
 
+            if (now - _lastAlertCheck >= TimeSpan.FromSeconds(5))
+            {
+                _lastAlertCheck = now;
+                CheckAlerts(now, hidden);
+            }
+
             Raise(nameof(ActivityTabHeader));
             Raise(nameof(HiddenTabHeader));
             StatusText = $"{ActivityRows.Count} app(s) com atividade em: {SelectedInterval.Label.ToLowerInvariant()} — atualizado às {DateTime.Now:HH:mm:ss}";
+        }
+
+        /// <summary>
+        /// Avisa (uma vez por janela de tempo, por app) quando um app passa do limite configurado.
+        /// Apps bloqueados e, por padrão, ocultos são ignorados.
+        /// </summary>
+        private void CheckAlerts(DateTime now, HashSet<string> hidden)
+        {
+            if (!_settings.AlertsEnabled || NotificationRequested == null)
+                return;
+
+            var window = TimeSpan.FromMinutes(_settings.AlertWindowMinutes);
+            var threshold = (long)_settings.AlertThresholdMb * 1024 * 1024;
+            foreach (var s in _store.Query(window, now))
+            {
+                var total = s.Sent + s.Received;
+                if (total < threshold
+                    || _blockedIds.Contains(s.App.Id)
+                    || (!_settings.AlertIncludeHidden && hidden.Contains(s.App.Id))
+                    || (_lastAlertByApp.TryGetValue(s.App.Id, out var last) && now - last < window))
+                    continue;
+
+                _lastAlertByApp[s.App.Id] = now;
+                var label = Intervals.FirstOrDefault(i => i.Minutes == _settings.AlertWindowMinutes)?.Label.ToLowerInvariant()
+                            ?? $"últimos {_settings.AlertWindowMinutes} minutos";
+                NotificationRequested(
+                    $"Alto consumo: {s.App.DisplayName}",
+                    $"{Format.Bytes(total)} ({label}) — ↓ {Format.Bytes(s.Received)}  ↑ {Format.Bytes(s.Sent)}.\nAbra o NetMonitor para bloquear, se quiser.");
+            }
         }
 
         private void Sync(ObservableCollection<AppRowViewModel> rows, Dictionary<string, AppRowViewModel> byId,

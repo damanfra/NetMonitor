@@ -1,19 +1,56 @@
+# Gera o NetMonitor.exe "self-contained" (com o .NET 8 embutido, não precisa instalar nada).
+#  - push na main      -> compila, guarda o .exe como artifact e publica um Release (vX.Y.N)
+#  - pull request/main -> só compila e guarda o .exe como artifact (para testar antes do merge)
+#  - manual            -> aba Actions > build > Run workflow
 name: build
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  VERSION: 1.0.${{ github.run_number }}
 
 jobs:
   build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - run: dotnet publish src/NetMonitor/NetMonitor.csproj -c Release -o publish
+
+      - name: Publicar .exe único (self-contained, win-x64)
+        run: >
+          dotnet publish src/NetMonitor/NetMonitor.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeAllContentForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:DebugType=none
+          -p:Version=${{ env.VERSION }}
+          -o publish
+
       - uses: actions/upload-artifact@v4
         with:
-          name: NetMonitor
-          path: publish/
+          name: NetMonitor-${{ env.VERSION }}
+          path: publish/NetMonitor.exe
+
+      - name: Criar Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: NetMonitor ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
+          files: publish/NetMonitor.exe
+          body: |
+            Executável único para Windows 10/11 x64, com o .NET 8 embutido.
+            Baixe `NetMonitor.exe` e execute (pede permissão de Administrador).

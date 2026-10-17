@@ -16,7 +16,11 @@ Interface mais simples que o GlassWire, sem limites de versão "Premium".
 | R4 | Desbloquear facilmente se quebrar algo | ✅ aba Bloqueados + desbloquear na própria linha |
 | R5 | Filtro para esconder apps do sistema operacional | ✅ "componentes do Windows" e "apps da Microsoft" |
 | R6 | Esconder manualmente apps conhecidos, com aba "Ocultos" | ✅ persistido em settings.json |
-| R7 | Interface simples | ✅ uma janela, 3 abas |
+| R7 | Interface simples | ✅ uma janela, 4 abas |
+| R8 | Aba Configurações com "Iniciar com o Windows" Sim/Não | ✅ v0.2 (tarefa agendada) |
+| R9 | Alerta quando um app passar de um certo consumo (sem alerta de "primeira conexão") | ✅ v0.2 |
+| R10 | Filtros de Windows/Microsoft ligados por padrão | ✅ v0.2 |
+| R11 | Build automático na `main` gerando .exe com .NET 8 embutido | ✅ v0.2 (GitHub Actions + Release) |
 
 ## 2. Decisões técnicas
 
@@ -49,7 +53,31 @@ Interface mais simples que o GlassWire, sem limites de versão "Premium".
 - Aviso extra ao bloquear componentes do Windows. Aviso em faixa amarela se o Firewall
   estiver desligado no perfil atual (aí o bloqueio não tem efeito).
 
-### 2.4 Identidade de um "aplicativo"
+### 2.4 Iniciar com o Windows: Agendador de Tarefas
+- A chave `Run` do registro não serve: o Windows não inicia silenciosamente programas que exigem
+  Administrador. Uma tarefa agendada com *RunLevel=HighestAvailable* e gatilho de logon inicia
+  elevada e sem UAC.
+- Criada via `schtasks /Create /XML` para desligar os padrões ruins (parar após 3 dias, não
+  rodar na bateria). Argumento `--minimized` abre direto na bandeja.
+- A tarefa é a fonte da verdade (não fica em settings.json). A cada início, se a tarefa existir,
+  é recriada apontando para o caminho atual do .exe.
+- **Instância única** (mutex global): duas instâncias derrubariam a sessão ETW uma da outra.
+  Abrir de novo só traz a janela existente para frente.
+
+### 2.5 Alertas de consumo
+- A cada 5 s verifica o total (↓+↑) de cada app na janela configurada (padrão 100 MB / 5 min).
+- No máximo 1 alerta por app por janela; ignora bloqueados e (por padrão) ocultos.
+- Exibido como notificação da bandeja; clicar abre o NetMonitor.
+- Decisão do usuário: **não** alertar "primeira conexão" de apps novos (incômodo no GlassWire).
+
+### 2.6 Distribuição
+- GitHub Actions (`windows-latest`) publica `-r win-x64 --self-contained -p:PublishSingleFile=true
+  -p:IncludeAllContentForSelfExtract=true` → um único `NetMonitor.exe` (~70 MB) com o .NET embutido.
+- `IncludeAllContentForSelfExtract` porque o TraceEvent carrega DLLs nativas relativas ao próprio
+  assembly; extraindo tudo, os caminhos funcionam como numa instalação normal.
+- Push na `main` → Release `v1.0.<número da execução>` com o .exe anexado.
+
+### 2.7 Identidade de um "aplicativo"
 - Chave = caminho do executável em minúsculas.
 - `svchost.exe` = caminho + lista de serviços hospedados naquele PID (via WMI `Win32_Service`).
 - PID 0/4 = "Sistema (Kernel do Windows)" — não bloqueável.
@@ -57,7 +85,8 @@ Interface mais simples que o GlassWire, sem limites de versão "Premium".
 - "Componente do Windows" = executável dentro de `%WINDIR%`. "App da Microsoft" = `CompanyName`
   do arquivo contém "Microsoft".
 
-### 2.5 Armazenamento do histórico (em memória)
+### 2.8 Armazenamento do histórico (em memória)
+- Decisão do usuário: o histórico **não** precisa sobreviver a reinícios.
 - Última 1 h em baldes de 1 s; de 1 h até 24 h compactado em baldes de 1 min.
 - Velocidade "Agora" = média dos últimos 3 s completos.
 - Hosts por app: totais acumulados desde que o NetMonitor iniciou, filtrados pela última atividade
@@ -80,6 +109,7 @@ src/NetMonitor/
 │   ├── FirewallManager.cs     Bloquear / desbloquear / listar via HNetCfg.FwPolicy2
 │   ├── ConnectionKiller.cs    Derruba conexões TCP abertas de PIDs bloqueados
 │   ├── SettingsStore.cs       %APPDATA%\NetMonitor\settings.json
+│   ├── StartupManager.cs      Iniciar com o Windows (tarefa agendada)
 │   ├── IconCache.cs           Ícone do .exe
 │   └── Format.cs              Formatação de bytes/tempo (pt-BR)
 ├── ViewModels/                MVVM sem framework (ObservableObject, RelayCommand)
@@ -90,7 +120,7 @@ Fluxo: `ETW thread → ProcessResolver → TrafficStore.Record()`; a UI, a cada 
 chama `TrafficStore.Query(intervalo)` e sincroniza as linhas (sem recriar, para manter
 seleção e ordenação ao vivo).
 
-## 4. Estado atual (v0.1)
+## 4. Estado atual (v0.2)
 
 - Compila sem erros/avisos (`dotnet build -c Release`). Foi compilado fora do Windows
   (`EnableWindowsTargeting`), **ainda não foi executado em uma máquina Windows real** — o primeiro
@@ -107,12 +137,12 @@ Prioridade alta
 - [ ] Testar em Windows real e corrigir o que aparecer (lista da seção 4).
 - [ ] Ícone próprio do app (`.ico`) para janela/bandeja.
 - [ ] Gráfico simples de tráfego total no tempo (como a faixa inferior do GlassWire).
-- [ ] Persistir o histórico em disco (SQLite) para sobreviver a reinícios.
-- [ ] Opção "Iniciar com o Windows" (Agendador de Tarefas com privilégio elevado, sem prompt UAC).
+- [x] Opção "Iniciar com o Windows" (v0.2).
+- [x] Build automático com .exe self-contained (v0.2).
 
 Prioridade média
-- [ ] Alerta de "primeira conexão" de um app novo (como o Log Analysis do GlassWire).
-- [ ] Alerta quando um app passa de X MB no intervalo.
+- [x] Alerta quando um app passa de X MB no intervalo (v0.2).
+- [ ] Ação "Bloquear" direto na notificação de alerta (exige toast nativo do Windows, não balão).
 - [ ] Bloqueio temporário (ex.: 1 h) com desbloqueio automático.
 - [ ] Separar tráfego WAN × LAN por app.
 - [ ] País do IP remoto (base GeoIP offline).
@@ -122,11 +152,18 @@ Prioridade baixa
 - [ ] Bloquear apenas um host/IP específico de um app.
 - [ ] Tema escuro.
 - [ ] Instalador (MSIX ou Inno Setup).
+- [ ] Assinatura de código do .exe (evitar aviso do SmartScreen).
 
-## 6. Perguntas em aberto para o usuário
+Descartado por decisão do usuário: persistir histórico em disco; alerta de "primeira conexão".
 
-1. Quer que o NetMonitor **inicie com o Windows** e fique na bandeja por padrão?
-2. O histórico precisa **sobreviver a reinícios** do PC/app, ou só a sessão atual basta?
-3. Quer **alertas** (notificação do Windows) para "app novo usando a rede" ou "consumo acima de X"?
-4. Os filtros "Ocultar componentes do Windows / Microsoft" devem vir **ligados por padrão**?
-5. Prefere a interface em português apenas, ou português/inglês?
+## 6. Respostas do usuário
+
+1. Iniciar com o Windows → sim, como opção Sim/Não numa aba Configurações.
+2. Histórico sobreviver a reinícios → não.
+3. Alertas → só de consumo acima de um limite; nada de "primeira conexão".
+4. Filtros Windows/Microsoft → ligados por padrão.
+
+## 7. Perguntas em aberto
+
+1. Prefere a interface em português apenas, ou português/inglês?
+2. Valores padrão do alerta (100 MB em 5 min) estão bons?

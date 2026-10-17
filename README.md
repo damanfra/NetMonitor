@@ -19,12 +19,20 @@ via Firewall do Windows — uma alternativa simples e gratuita ao GlassWire.
 - Aba **Bloqueados** lista tudo que foi bloqueado (lido das próprias regras do firewall),
   com "Desbloquear" e "Desbloquear todos".
 - Minimiza para a bandeja do sistema sem parar de monitorar.
+- **Alertas de consumo**: notificação do Windows quando um app passa de X MB em um período
+  (padrão: 100 MB em 5 minutos), no máximo um aviso por app por período.
+- Aba **Configurações**: iniciar com o Windows (Sim/Não), alertas, bandeja, filtros.
+
+## Download (sem compilar)
+
+Na página **Releases** do repositório, baixe o `NetMonitor.exe` mais recente. Ele já traz o
+.NET 8 embutido — não precisa instalar nada. Cada push na branch `main` gera um novo Release
+automaticamente (workflow `.github/workflows/build.yml`).
 
 ## Requisitos
 
 - Windows 10 ou 11 (x64)
-- [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) para rodar,
-  ou o .NET 8 SDK para compilar
+- Para compilar: .NET 8 SDK
 - Executar **como Administrador** (o executável já pede elevação via UAC) — necessário para
   ler os eventos de rede do kernel (ETW) e criar regras de firewall.
 
@@ -36,14 +44,17 @@ cd NetMonitor
 dotnet build -c Release
 # executável em: src\NetMonitor\bin\Release\net8.0-windows\win-x64\NetMonitor.exe
 
-# ou gerar uma pasta pronta para copiar:
-dotnet publish src/NetMonitor/NetMonitor.csproj -c Release -o publish
+# ou gerar o mesmo .exe único (com .NET embutido) que a Action gera:
+dotnet publish src/NetMonitor/NetMonitor.csproj -c Release -r win-x64 --self-contained true `
+  -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true `
+  -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish
 ```
 
 Também é possível abrir `NetMonitor.sln` no Visual Studio 2022 (rode o VS como Administrador
 para depurar).
 
-Cada push no GitHub dispara o workflow `build`, que publica o executável como *artifact* da execução.
+O workflow `build` roda em push na `main` (gera Release), em pull requests para a `main`
+(gera o .exe como *artifact* para teste) e manualmente pela aba Actions.
 
 ## Como funciona (resumo)
 
@@ -54,6 +65,8 @@ Cada push no GitHub dispara o workflow `build`, que publica o executável como *
 | Bloqueio | Regras do Windows Defender Firewall (COM `HNetCfg.FwPolicy2`), grupo **NetMonitor** |
 | Interface | WPF (.NET 8) |
 | Configurações | `%APPDATA%\NetMonitor\settings.json` |
+| Iniciar com o Windows | Tarefa agendada "NetMonitor" (ao fazer logon, privilégios mais altos, sem UAC) |
+| Alertas | Notificação na bandeja (`NotifyIcon.ShowBalloonTip`) |
 
 Detalhes, decisões e próximos passos em [docs/PLANEJAMENTO.md](docs/PLANEJAMENTO.md).
 

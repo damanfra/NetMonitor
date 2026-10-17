@@ -16,20 +16,26 @@ namespace NetMonitor.Services
     public sealed class AppSettings
     {
         public int IntervalMinutes { get; set; } = 5;
-        public bool HideWindowsComponents { get; set; }
-        public bool HideMicrosoftApps { get; set; }
+        public bool HideWindowsComponents { get; set; } = true;
+        public bool HideMicrosoftApps { get; set; } = true;
         public bool CloseConnectionsOnBlock { get; set; } = true;
         public bool MinimizeToTray { get; set; } = true;
+
+        /// <summary>Notificar quando um app ultrapassar <see cref="AlertThresholdMb"/> em <see cref="AlertWindowMinutes"/>.</summary>
+        public bool AlertsEnabled { get; set; } = true;
+        public int AlertThresholdMb { get; set; } = 100;
+        public int AlertWindowMinutes { get; set; } = 5;
+        public bool AlertIncludeHidden { get; set; }
         public List<HiddenApp> HiddenApps { get; set; } = new();
     }
 
     /// <summary>Configurações em %APPDATA%\NetMonitor\settings.json.</summary>
     public static class SettingsStore
     {
-        private static readonly string Folder =
+        public static readonly string Folder =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "NetMonitor");
 
-        private static readonly string FilePath = Path.Combine(Folder, "settings.json");
+        public static readonly string FilePath = Path.Combine(Folder, "settings.json");
 
         private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 

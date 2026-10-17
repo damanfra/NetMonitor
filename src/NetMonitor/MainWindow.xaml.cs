@@ -30,6 +30,20 @@ namespace NetMonitor
                 Visible = true,
             };
             _tray.DoubleClick += (_, _) => RestoreFromTray();
+            _tray.BalloonTipClicked += (_, _) => RestoreFromTray();
+
+            viewModel.NotificationRequested += (title, text) =>
+                _tray.ShowBalloonTip(10000, title, text, Forms.ToolTipIcon.Warning);
+        }
+
+        /// <summary>Usado quando o app é iniciado pelo Windows (--minimized): fica só na bandeja.</summary>
+        public void StartInTray()
+        {
+            ShowInTaskbar = false;
+            WindowState = WindowState.Minimized;
+            Show();
+            Hide();
+            ShowInTaskbar = true;
         }
 
         protected override void OnStateChanged(EventArgs e)
@@ -46,11 +60,14 @@ namespace NetMonitor
             _tray.Dispose();
         }
 
-        private void RestoreFromTray()
+        public void RestoreFromTray()
         {
             Show();
-            WindowState = WindowState.Normal;
+            if (WindowState == WindowState.Minimized)
+                WindowState = WindowState.Normal;
             Activate();
+            Topmost = true;  // traz para frente mesmo se outra janela tiver o foco
+            Topmost = false;
         }
     }
 }

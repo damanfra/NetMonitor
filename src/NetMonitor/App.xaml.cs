@@ -1,4 +1,7 @@
 using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using NetMonitor.Services;
 using NetMonitor.ViewModels;
@@ -7,11 +10,27 @@ namespace NetMonitor
 {
     public partial class App : Application
     {
+        private const string InstanceMutexName = "Global\\NetMonitor.SingleInstance";
+        private const string ShowEventName = "Global\\NetMonitor.ShowWindow";
+
         private EtwTrafficMonitor? _monitor;
+        private Mutex? _instanceMutex;
+        private EventWaitHandle? _showEvent;
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            // Uma única instância: duas sessões ETW com o mesmo nome se derrubariam.
+            // Se já houver uma aberta, pede para ela aparecer e sai.
+            _instanceMutex = new Mutex(true, InstanceMutexName, out var isFirst);
+            if (!isFirst)
+            {
+                try { EventWaitHandle.OpenExisting(ShowEventName).Set(); }
+                catch { /* a outra instância ainda está iniciando */ }
+                Shutdown();
+                return;
+            }
 
             var settings = SettingsStore.Load();
             var store = new TrafficStore();
@@ -40,13 +59,33 @@ namespace NetMonitor
 
             var window = new MainWindow(vm, settings);
             MainWindow = window;
-            window.Show();
+            if (e.Args.Contains(StartupManager.MinimizedArgument, StringComparer.OrdinalIgnoreCase))
+                window.StartInTray();
+            else
+                window.Show();
             vm.Start();
+
+            _showEvent = new EventWaitHandle(false, EventResetMode.AutoReset, ShowEventName);
+            var showEvent = _showEvent;
+            new Thread(() =>
+            {
+                while (true)
+                {
+                    try { showEvent.WaitOne(); }
+                    catch { return; }
+                    Dispatcher.BeginInvoke(window.RestoreFromTray);
+                }
+            })
+            { IsBackground = true, Name = "SingleInstance" }.Start();
+
+            // Se o .exe foi movido/atualizado, mantém a tarefa de inicialização apontando para ele.
+            Task.Run(StartupManager.RefreshIfEnabled);
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
             _monitor?.Dispose();
+            _instanceMutex?.Dispose();
             base.OnExit(e);
         }
     }
