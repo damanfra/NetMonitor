@@ -187,6 +187,9 @@ Executável: {1}</value>
   <data name="Filter_HideWindows_Tooltip" xml:space="preserve">
     <value>Esconde executáveis da pasta do Windows (svchost, System, etc.)</value>
   </data>
+  <data name="Footer_Credits" xml:space="preserve">
+    <value>by Daniel Manfrini - Powered by Claude Code</value>
+  </data>
   <data name="Hidden_Hint" xml:space="preserve">
     <value>Apps que você marcou como seguros/irrelevantes. Eles continuam sendo monitorados (o tráfego do intervalo aparece aqui), só não poluem a aba Atividade.</value>
   </data>

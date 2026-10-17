@@ -4,7 +4,7 @@
         xmlns:l="clr-namespace:NetMonitor.Localization"
         Title="{Binding WindowTitle}"
         Icon="pack://application:,,,/Assets/NetMonitor.ico"
-        Width="1240" Height="800" MinWidth="900" MinHeight="540"
+        Width="1280" Height="720" MinWidth="900" MinHeight="540"
         Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
         FontFamily="{StaticResource UiFont}" FontSize="13"
         TextOptions.TextFormattingMode="Display" UseLayoutRounding="True"
@@ -141,7 +141,11 @@
         <!-- ================= Barra de status ================= -->
         <Border DockPanel.Dock="Bottom" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="0,1,0,0" Padding="20,6">
-            <TextBlock Text="{Binding StatusText}" Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Right" Text="{l:T Footer_Credits}" FontSize="10.5" Foreground="{StaticResource FaintTextBrush}"
+                           VerticalAlignment="Center" Margin="16,0,0,0" />
+                <TextBlock Text="{Binding StatusText}" Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+            </DockPanel>
         </Border>
 
         <!-- ================= Avisos ================= -->
@@ -168,9 +172,9 @@
                 <Grid Margin="20,14,20,16">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" MinHeight="140" />
+                        <RowDefinition Height="3*" MinHeight="140" />
                         <RowDefinition Height="10" />
-                        <RowDefinition Height="220" MinHeight="80" />
+                        <RowDefinition Height="2*" MinHeight="80" />
                     </Grid.RowDefinitions>
 
                     <!-- Barra de ferramentas -->

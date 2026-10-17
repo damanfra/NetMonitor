@@ -26,6 +26,8 @@ Interface mais simples que o GlassWire, sem limites de versão "Premium".
 | R14 | Versão na barra de título: "NetMonitor - vX.Y.Z" | ✅ v0.4 |
 | R15 | Verificar/instalar atualizações (aba Configurações + checagem ao iniciar, aviso discreto) | ✅ v0.4 (GitHub Releases) |
 | R16 | Visual moderno (sem "cara de Windows 95") mantendo a organização das telas | ✅ v0.4 (tema Fluent claro) |
+| R17 | Rodapé com crédito discreto à direita: "by Daniel Manfrini - Powered by Claude Code" | ✅ v0.5 |
+| R18 | Tamanho padrão de abertura para telas 1366×768 | ✅ v0.5 (1280×720, limitado à área de trabalho) |
 
 ## 2. Decisões técnicas
 
@@ -172,7 +174,7 @@ Fluxo: `ETW thread → ProcessResolver → TrafficStore.Record()`; a UI, a cada 
 chama `TrafficStore.Query(intervalo)` e sincroniza as linhas (sem recriar, para manter
 seleção e ordenação ao vivo).
 
-## 4. Estado atual (v0.4)
+## 4. Estado atual (v0.5)
 
 - Compila sem erros/avisos (`dotnet build -c Release`). Foi compilado fora do Windows
   (`EnableWindowsTargeting`), **ainda não foi executado em uma máquina Windows real** — o primeiro

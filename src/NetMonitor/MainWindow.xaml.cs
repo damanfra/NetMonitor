@@ -18,6 +18,7 @@ namespace NetMonitor
             InitializeComponent();
             DataContext = viewModel;
             _settings = settings;
+            FitToWorkArea();
 
             // Ícone na bandeja: minimizar não interrompe o monitoramento.
             var menu = new Forms.ContextMenuStrip();
@@ -35,6 +36,17 @@ namespace NetMonitor
 
             viewModel.NotificationRequested += (title, text) =>
                 _tray.ShowBalloonTip(10000, title, text, Forms.ToolTipIcon.Warning);
+        }
+
+        /// <summary>
+        /// Tamanho padrão 1280x720 (cabe em telas 1366x768 descontando a barra de tarefas);
+        /// em telas menores, encolhe para caber na área de trabalho.
+        /// </summary>
+        private void FitToWorkArea()
+        {
+            var area = SystemParameters.WorkArea;
+            Width = Math.Max(MinWidth, Math.Min(Width, area.Width - 24));
+            Height = Math.Max(MinHeight, Math.Min(Height, area.Height - 24));
         }
 
         /// <summary>Usado quando o app é iniciado pelo Windows (--minimized): fica só na bandeja.</summary>

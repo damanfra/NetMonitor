@@ -154,5 +154,8 @@ namespace NetMonitor.ViewModels
     {
         /// <summary>Texto do combo, ex.: "Últimos 5 minutos" (chave Interval_&lt;minutos&gt;).</summary>
         public string Label => Loc.T("Interval_" + Minutes);
+
+        // O ComboBox mostra o item selecionado via ToString(); sem isto aparecia "IntervalOption { Minutes = 5 }".
+        public override string ToString() => Label;
     }
 }

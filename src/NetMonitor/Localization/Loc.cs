@@ -8,7 +8,10 @@ using System.Threading;
 
 namespace NetMonitor.Localization
 {
-    public sealed record LanguageOption(string Code, string Name);
+    public sealed record LanguageOption(string Code, string Name)
+    {
+        public override string ToString() => Name;
+    }
 
     /// <summary>
     /// Ponto único de acesso aos textos da interface (Localization/Strings*.resx).
