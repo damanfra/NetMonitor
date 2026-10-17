@@ -4,6 +4,7 @@ using System.IO;
 using System.Security;
 using System.Security.Principal;
 using System.Text;
+using NetMonitor.Localization;
 
 namespace NetMonitor.Services
 {
@@ -24,7 +25,7 @@ namespace NetMonitor.Services
 
         public static void Enable()
         {
-            var exe = Environment.ProcessPath ?? throw new InvalidOperationException("Caminho do executável desconhecido.");
+            var exe = Environment.ProcessPath ?? throw new InvalidOperationException(Loc.T("Error_UnknownExePath"));
             var user = WindowsIdentity.GetCurrent().Name;
             var xmlPath = Path.Combine(Path.GetTempPath(), "NetMonitor-task.xml");
 
@@ -33,7 +34,7 @@ namespace NetMonitor.Services
             var xml = $@"<?xml version=""1.0"" encoding=""UTF-16""?>
 <Task version=""1.2"" xmlns=""http://schemas.microsoft.com/windows/2004/02/mit/task"">
   <RegistrationInfo>
-    <Description>Inicia o NetMonitor minimizado na bandeja ao entrar no Windows.</Description>
+    <Description>{SecurityElement.Escape(Loc.T("Startup_TaskDescription"))}</Description>
   </RegistrationInfo>
   <Triggers>
     <LogonTrigger>

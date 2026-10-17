@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Media;
+using NetMonitor.Localization;
 using NetMonitor.Models;
 using NetMonitor.Services;
 
@@ -63,7 +64,7 @@ namespace NetMonitor.ViewModels
             set { if (Set(ref _isBlocked, value)) Raise(nameof(BlockButtonText)); }
         }
 
-        public string BlockButtonText => IsBlocked ? "Desbloquear" : "Bloquear";
+        public string BlockButtonText => Loc.T(IsBlocked ? "Button_Unblock" : "Button_Block");
 
         public ObservableCollection<HostRowViewModel> Hosts { get; } = new();
 
@@ -114,7 +115,7 @@ namespace NetMonitor.ViewModels
         public HostRowViewModel(HostSnapshot h, string? name, DateTime nowUtc)
         {
             Address = h.Address.IsIPv4MappedToIPv6 ? h.Address.MapToIPv4().ToString() : h.Address.ToString();
-            HostName = name ?? (DnsNameCache.IsPrivate(h.Address) ? "(rede local)" : "");
+            HostName = name ?? (DnsNameCache.IsPrivate(h.Address) ? Loc.T("Host_LocalNetwork") : "");
             Port = h.LastPort;
             DownloadText = Format.Bytes(h.Received);
             UploadText = Format.Bytes(h.Sent);
@@ -137,7 +138,7 @@ namespace NetMonitor.ViewModels
             DisplayName = b.DisplayName;
             ExePath = b.ExePath;
             Service = b.Service ?? "";
-            BlockedAtText = b.BlockedAt?.ToString("dd/MM/yyyy HH:mm") ?? "";
+            BlockedAtText = b.BlockedAt?.ToString("g", Loc.Instance.Culture) ?? "";
             Icon = IconCache.Get(b.ExePath);
         }
 
@@ -149,5 +150,9 @@ namespace NetMonitor.ViewModels
         public ImageSource? Icon { get; }
     }
 
-    public sealed record IntervalOption(string Label, int Minutes);
+    public sealed record IntervalOption(int Minutes)
+    {
+        /// <summary>Texto do combo, ex.: "Últimos 5 minutos" (chave Interval_&lt;minutos&gt;).</summary>
+        public string Label => Loc.T("Interval_" + Minutes);
+    }
 }

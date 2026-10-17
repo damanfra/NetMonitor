@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Textos da interface em Português (Brasil) — idioma padrão (neutro) do NetMonitor.
+  Para outro idioma: copie este arquivo para Strings.<código>.resx (ex.: Strings.en.resx),
+  traduza os <value> mantendo os {0}, {1}… e registre o idioma em Loc.Supported.
+-->
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Ago_Minutes" xml:space="preserve">
+    <value>há {0} min</value>
+  </data>
+  <data name="Ago_Now" xml:space="preserve">
+    <value>agora</value>
+  </data>
+  <data name="Ago_Seconds" xml:space="preserve">
+    <value>há {0} s</value>
+  </data>
+  <data name="Alert_Body" xml:space="preserve">
+    <value>{0} ({1}) — ↓ {2}  ↑ {3}.
+Abra o NetMonitor para bloquear, se quiser.</value>
+  </data>
+  <data name="Alert_LastMinutes" xml:space="preserve">
+    <value>últimos {0} minutos</value>
+  </data>
+  <data name="Alert_Title" xml:space="preserve">
+    <value>Alto consumo: {0}</value>
+  </data>
+  <data name="App_ServicePrefix" xml:space="preserve">
+    <value>Serviço: {0}</value>
+  </data>
+  <data name="App_System" xml:space="preserve">
+    <value>Sistema (Kernel do Windows)</value>
+  </data>
+  <data name="App_Unknown" xml:space="preserve">
+    <value>Processo encerrado / desconhecido</value>
+  </data>
+  <data name="Badge_Blocked" xml:space="preserve">
+    <value>BLOQUEADO</value>
+  </data>
+  <data name="Banner_FirewallDisabled" xml:space="preserve">
+    <value>O Firewall do Windows está DESATIVADO no perfil de rede atual — os bloqueios não terão efeito até ele ser reativado.</value>
+  </data>
+  <data name="Block_Confirm" xml:space="preserve">
+    <value>Bloquear todo o acesso à rede (entrada e saída) de:
+
+{0}
+{1}
+
+Será criada uma regra no Firewall do Windows. Você pode desfazer a qualquer momento.</value>
+  </data>
+  <data name="Block_ConfirmTitle" xml:space="preserve">
+    <value>Bloquear aplicativo</value>
+  </data>
+  <data name="Block_ServiceTarget" xml:space="preserve">
+    <value>Serviço(s): {0}
+Executável: {1}</value>
+  </data>
+  <data name="Block_WindowsWarning" xml:space="preserve">
+    <value>⚠ ATENÇÃO: este é um componente do Windows. Bloqueá-lo pode afetar atualizações, resolução de nomes (DNS), horário, rede local etc. Se algo parar de funcionar, desbloqueie na aba "Bloqueados".</value>
+  </data>
+  <data name="Blocked_Hint" xml:space="preserve">
+    <value>Bloqueios são regras do Firewall do Windows (grupo "NetMonitor"). Continuam valendo com o NetMonitor fechado. Se algo quebrar, clique em Desbloquear.</value>
+  </data>
+  <data name="Blocked_OpenFirewall" xml:space="preserve">
+    <value>Abrir Firewall do Windows</value>
+  </data>
+  <data name="Blocked_UnblockAll" xml:space="preserve">
+    <value>Desbloquear todos</value>
+  </data>
+  <data name="Button_Block" xml:space="preserve">
+    <value>Bloquear</value>
+  </data>
+  <data name="Button_Hide" xml:space="preserve">
+    <value>Ocultar</value>
+  </data>
+  <data name="Button_Unblock" xml:space="preserve">
+    <value>Desbloquear</value>
+  </data>
+  <data name="Button_Unhide" xml:space="preserve">
+    <value>Mostrar novamente</value>
+  </data>
+  <data name="Column_Actions" xml:space="preserve">
+    <value>Ações</value>
+  </data>
+  <data name="Column_App" xml:space="preserve">
+    <value>Aplicativo</value>
+  </data>
+  <data name="Column_BlockedAt" xml:space="preserve">
+    <value>Bloqueado em</value>
+  </data>
+  <data name="Column_Download" xml:space="preserve">
+    <value>↓ Download</value>
+  </data>
+  <data name="Column_Host" xml:space="preserve">
+    <value>Host</value>
+  </data>
+  <data name="Column_Hosts" xml:space="preserve">
+    <value>Hosts</value>
+  </data>
+  <data name="Column_Ip" xml:space="preserve">
+    <value>IP</value>
+  </data>
+  <data name="Column_LastActivity" xml:space="preserve">
+    <value>Últ. atividade</value>
+  </data>
+  <data name="Column_Now" xml:space="preserve">
+    <value>Agora</value>
+  </data>
+  <data name="Column_Port" xml:space="preserve">
+    <value>Porta</value>
+  </data>
+  <data name="Column_Received" xml:space="preserve">
+    <value>↓ Recebido*</value>
+  </data>
+  <data name="Column_Sent" xml:space="preserve">
+    <value>↑ Enviado*</value>
+  </data>
+  <data name="Column_Service" xml:space="preserve">
+    <value>Serviço</value>
+  </data>
+  <data name="Column_Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Column_Upload" xml:space="preserve">
+    <value>↑ Upload</value>
+  </data>
+  <data name="Common_Error" xml:space="preserve">
+    <value>Erro</value>
+  </data>
+  <data name="Common_No" xml:space="preserve">
+    <value>Não</value>
+  </data>
+  <data name="Common_Yes" xml:space="preserve">
+    <value>Sim</value>
+  </data>
+  <data name="Details_ConnectionsOf" xml:space="preserve">
+    <value>Conexões de: </value>
+  </data>
+  <data name="Details_Pids" xml:space="preserve">
+    <value>   PIDs: </value>
+  </data>
+  <data name="Error_CreateRule" xml:space="preserve">
+    <value>Falha ao criar a regra de firewall:
+{0}</value>
+  </data>
+  <data name="Error_MonitorStart" xml:space="preserve">
+    <value>Não foi possível iniciar o monitoramento (ETW): {0}</value>
+  </data>
+  <data name="Error_MonitorStopped" xml:space="preserve">
+    <value>O monitoramento parou: {0}</value>
+  </data>
+  <data name="Error_NoExecutable" xml:space="preserve">
+    <value>Este item não tem um executável associado e não pode ser bloqueado.</value>
+  </data>
+  <data name="Error_NotElevated" xml:space="preserve">
+    <value>O NetMonitor precisa ser executado como Administrador para monitorar o tráfego e criar regras de firewall.</value>
+  </data>
+  <data name="Error_ReadRules" xml:space="preserve">
+    <value>Não foi possível ler as regras do Firewall: {0}</value>
+  </data>
+  <data name="Error_RemoveRule" xml:space="preserve">
+    <value>Falha ao remover a regra de firewall:
+{0}</value>
+  </data>
+  <data name="Error_Startup" xml:space="preserve">
+    <value>Não foi possível alterar a inicialização automática:
+{0}</value>
+  </data>
+  <data name="Error_UnknownExePath" xml:space="preserve">
+    <value>Caminho do executável desconhecido.</value>
+  </data>
+  <data name="Filter_HideMicrosoft" xml:space="preserve">
+    <value>Ocultar apps da Microsoft</value>
+  </data>
+  <data name="Filter_HideMicrosoft_Tooltip" xml:space="preserve">
+    <value>Esconde qualquer executável cuja empresa seja Microsoft (Edge, OneDrive, Teams…)</value>
+  </data>
+  <data name="Filter_HideWindows" xml:space="preserve">
+    <value>Ocultar componentes do Windows</value>
+  </data>
+  <data name="Filter_HideWindows_Tooltip" xml:space="preserve">
+    <value>Esconde executáveis da pasta do Windows (svchost, System, etc.)</value>
+  </data>
+  <data name="Hidden_Hint" xml:space="preserve">
+    <value>Apps que você marcou como seguros/irrelevantes. Eles continuam sendo monitorados (o tráfego do intervalo aparece aqui), só não poluem a aba Atividade.</value>
+  </data>
+  <data name="Host_LocalNetwork" xml:space="preserve">
+    <value>(rede local)</value>
+  </data>
+  <data name="Interval_1" xml:space="preserve">
+    <value>Último 1 minuto</value>
+  </data>
+  <data name="Interval_10" xml:space="preserve">
+    <value>Últimos 10 minutos</value>
+  </data>
+  <data name="Interval_1440" xml:space="preserve">
+    <value>Últimas 24 horas</value>
+  </data>
+  <data name="Interval_15" xml:space="preserve">
+    <value>Últimos 15 minutos</value>
+  </data>
+  <data name="Interval_180" xml:space="preserve">
+    <value>Últimas 3 horas</value>
+  </data>
+  <data name="Interval_30" xml:space="preserve">
+    <value>Últimos 30 minutos</value>
+  </data>
+  <data name="Interval_5" xml:space="preserve">
+    <value>Últimos 5 minutos</value>
+  </data>
+  <data name="Interval_60" xml:space="preserve">
+    <value>Última 1 hora</value>
+  </data>
+  <data name="Menu_CopyPath" xml:space="preserve">
+    <value>Copiar caminho</value>
+  </data>
+  <data name="Menu_Hide" xml:space="preserve">
+    <value>Ocultar da lista</value>
+  </data>
+  <data name="Menu_OpenLocation" xml:space="preserve">
+    <value>Abrir local do arquivo</value>
+  </data>
+  <data name="Menu_ToggleBlock" xml:space="preserve">
+    <value>Bloquear / desbloquear</value>
+  </data>
+  <data name="Notification_TestBody" xml:space="preserve">
+    <value>As notificações de consumo estão funcionando.</value>
+  </data>
+  <data name="Notification_TestTitle" xml:space="preserve">
+    <value>NetMonitor — teste</value>
+  </data>
+  <data name="Rule_Inbound" xml:space="preserve">
+    <value>entrada</value>
+  </data>
+  <data name="Rule_Outbound" xml:space="preserve">
+    <value>saída</value>
+  </data>
+  <data name="Rule_Prefix" xml:space="preserve">
+    <value>NetMonitor - Bloqueio - </value>
+  </data>
+  <data name="Settings_About" xml:space="preserve">
+    <value>Sobre</value>
+  </data>
+  <data name="Settings_AlertIncludeHidden" xml:space="preserve">
+    <value>Incluir apps ocultos nos alertas</value>
+  </data>
+  <data name="Settings_AlertMbIn" xml:space="preserve">
+    <value>MB (download + upload) em</value>
+  </data>
+  <data name="Settings_AlertWhenOver" xml:space="preserve">
+    <value>Avisar quando um app passar de</value>
+  </data>
+  <data name="Settings_Alerts" xml:space="preserve">
+    <value>Alertas de consumo</value>
+  </data>
+  <data name="Settings_AlertsEnabled" xml:space="preserve">
+    <value>Avisar quando um aplicativo consumir muito</value>
+  </data>
+  <data name="Settings_Alerts_Hint" xml:space="preserve">
+    <value>Cada app gera no máximo um aviso por período escolhido. Apps bloqueados não geram aviso. O aviso aparece como notificação do Windows; clique nele para abrir o NetMonitor.</value>
+  </data>
+  <data name="Settings_Blocking" xml:space="preserve">
+    <value>Bloqueio</value>
+  </data>
+  <data name="Settings_CloseConnections" xml:space="preserve">
+    <value>Ao bloquear, derrubar as conexões que o app já tem abertas</value>
+  </data>
+  <data name="Settings_CloseConnections_Hint" xml:space="preserve">
+    <value>Regras de firewall valem para conexões novas. Com esta opção o bloqueio tem efeito imediato (conexões TCP IPv4).</value>
+  </data>
+  <data name="Settings_Display" xml:space="preserve">
+    <value>Exibição</value>
+  </data>
+  <data name="Settings_FileLocation" xml:space="preserve">
+    <value>Configurações em: </value>
+  </data>
+  <data name="Settings_Language" xml:space="preserve">
+    <value>Idioma:</value>
+  </data>
+  <data name="Settings_MinimizeToTray" xml:space="preserve">
+    <value>Ao minimizar, ir para a bandeja do sistema (continua monitorando)</value>
+  </data>
+  <data name="Settings_OpenFolder" xml:space="preserve">
+    <value>Abrir pasta</value>
+  </data>
+  <data name="Settings_StartWithWindows" xml:space="preserve">
+    <value>Iniciar com o Windows:</value>
+  </data>
+  <data name="Settings_StartWithWindows_Hint" xml:space="preserve">
+    <value>Cria uma tarefa no Agendador de Tarefas ("NetMonitor") que abre o programa minimizado na bandeja ao entrar no Windows, já como Administrador e sem pedir confirmação do UAC.</value>
+  </data>
+  <data name="Settings_Startup" xml:space="preserve">
+    <value>Inicialização</value>
+  </data>
+  <data name="Settings_TestNotification" xml:space="preserve">
+    <value>Testar notificação</value>
+  </data>
+  <data name="Settings_Version" xml:space="preserve">
+    <value>Versão {0}</value>
+  </data>
+  <data name="Startup_TaskDescription" xml:space="preserve">
+    <value>Inicia o NetMonitor minimizado na bandeja ao entrar no Windows.</value>
+  </data>
+  <data name="Status_AllUnblocked" xml:space="preserve">
+    <value>Todos os bloqueios foram removidos.</value>
+  </data>
+  <data name="Status_Blocked" xml:space="preserve">
+    <value>"{0}" bloqueado.</value>
+  </data>
+  <data name="Status_ConnectionsClosed" xml:space="preserve">
+    <value>{0} conexão(ões) ativa(s) encerrada(s).</value>
+  </data>
+  <data name="Status_Hidden" xml:space="preserve">
+    <value>"{0}" foi para a aba Ocultos.</value>
+  </data>
+  <data name="Status_Starting" xml:space="preserve">
+    <value>Iniciando…</value>
+  </data>
+  <data name="Status_StartupDisabled" xml:space="preserve">
+    <value>O NetMonitor não vai mais iniciar com o Windows.</value>
+  </data>
+  <data name="Status_StartupEnabled" xml:space="preserve">
+    <value>O NetMonitor vai iniciar com o Windows (minimizado na bandeja).</value>
+  </data>
+  <data name="Status_Summary" xml:space="preserve">
+    <value>{0} app(s) com atividade em: {1} — atualizado às {2:HH:mm:ss}</value>
+  </data>
+  <data name="Status_Unblocked" xml:space="preserve">
+    <value>"{0}" desbloqueado.</value>
+  </data>
+  <data name="Status_Unhidden" xml:space="preserve">
+    <value>"{0}" voltou a ser exibido.</value>
+  </data>
+  <data name="Tab_Activity" xml:space="preserve">
+    <value>Atividade ({0})</value>
+  </data>
+  <data name="Tab_Blocked" xml:space="preserve">
+    <value>Bloqueados ({0})</value>
+  </data>
+  <data name="Tab_Hidden" xml:space="preserve">
+    <value>Ocultos ({0})</value>
+  </data>
+  <data name="Tab_Settings" xml:space="preserve">
+    <value>Configurações</value>
+  </data>
+  <data name="Toolbar_Search" xml:space="preserve">
+    <value>Buscar:</value>
+  </data>
+  <data name="Toolbar_ShowActivity" xml:space="preserve">
+    <value>Mostrar atividade de:</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>Sair</value>
+  </data>
+  <data name="Tray_Open" xml:space="preserve">
+    <value>Abrir NetMonitor</value>
+  </data>
+  <data name="UnblockAll_Confirm" xml:space="preserve">
+    <value>Remover o bloqueio de todos os {0} aplicativo(s)?</value>
+  </data>
+  <data name="Window_Title" xml:space="preserve">
+    <value>NetMonitor — tráfego de rede por aplicativo</value>
+  </data>
+</root>

@@ -21,6 +21,7 @@ Interface mais simples que o GlassWire, sem limites de versão "Premium".
 | R9 | Alerta quando um app passar de um certo consumo (sem alerta de "primeira conexão") | ✅ v0.2 |
 | R10 | Filtros de Windows/Microsoft ligados por padrão | ✅ v0.2 |
 | R11 | Build automático na `main` gerando .exe com .NET 8 embutido | ✅ v0.2 (GitHub Actions + Release) |
+| R12 | Interface só em pt-BR por enquanto, pronta para inglês no futuro | ✅ v0.3 (textos em `.resx`) |
 
 ## 2. Decisões técnicas
 
@@ -92,6 +93,24 @@ Interface mais simples que o GlassWire, sem limites de versão "Premium".
 - Hosts por app: totais acumulados desde que o NetMonitor iniciou, filtrados pela última atividade
   dentro do intervalo (por isso as colunas têm `*`).
 
+### 2.9 Idiomas (i18n)
+- **Nenhum texto de interface fica no código.** Todos estão em `Localization/Strings.resx`
+  (pt-BR, idioma neutro do assembly — `NeutralLanguage=pt-BR`).
+- XAML: `Text="{l:T Chave}"` (markup extension `TExtension`, que gera uma binding para
+  `Loc.Instance[Chave]`). C#: `Loc.T("Chave")` ou `Loc.T("Chave", arg0, arg1…)` (usa `string.Format`
+  com a cultura atual, então `{0:HH:mm:ss}` etc. funcionam).
+- Troca de idioma em tempo de execução: `Loc.Instance.SetLanguage(código)` dispara `Item[]` e
+  todas as bindings do XAML se atualizam; textos montados no ViewModel se atualizam no próximo tick (1 s).
+- Idioma salvo em `settings.json` (`Language`), combo "Idioma" na aba Configurações
+  (hoje só com Português).
+- Formatação de números/datas segue `Loc.Instance.Culture`.
+- **Como adicionar inglês:**
+  1. Copiar `Strings.resx` → `Strings.en.resx` e traduzir os `<value>` (manter `{0}`, `{1}`…).
+  2. Descomentar `new LanguageOption("en", "English")` em `Localization/Loc.cs`.
+  3. No `.csproj`, `SatelliteResourceLanguages` → `pt-BR;en`.
+- Exceção consciente: nomes das regras de firewall usam o idioma ativo no momento do bloqueio;
+  o desbloqueio usa os metadados da descrição, então trocar o idioma não quebra nada.
+
 ## 3. Estrutura do código
 
 ```
@@ -112,6 +131,10 @@ src/NetMonitor/
 │   ├── StartupManager.cs      Iniciar com o Windows (tarefa agendada)
 │   ├── IconCache.cs           Ícone do .exe
 │   └── Format.cs              Formatação de bytes/tempo (pt-BR)
+├── Localization/
+│   ├── Strings.resx           TODOS os textos da interface (pt-BR)
+│   ├── Loc.cs                 Acesso aos textos, idioma atual, lista de idiomas
+│   └── TExtension.cs          {l:T Chave} para XAML
 ├── ViewModels/                MVVM sem framework (ObservableObject, RelayCommand)
 └── Interop/NativeMethods.cs   P/Invoke (kernel32, iphlpapi, user32)
 ```
@@ -120,7 +143,7 @@ Fluxo: `ETW thread → ProcessResolver → TrafficStore.Record()`; a UI, a cada 
 chama `TrafficStore.Query(intervalo)` e sincroniza as linhas (sem recriar, para manter
 seleção e ordenação ao vivo).
 
-## 4. Estado atual (v0.2)
+## 4. Estado atual (v0.3)
 
 - Compila sem erros/avisos (`dotnet build -c Release`). Foi compilado fora do Windows
   (`EnableWindowsTargeting`), **ainda não foi executado em uma máquina Windows real** — o primeiro
@@ -150,6 +173,7 @@ Prioridade média
 
 Prioridade baixa
 - [ ] Bloquear apenas um host/IP específico de um app.
+- [ ] Tradução para inglês (`Strings.en.resx`) — infraestrutura pronta desde a v0.3.
 - [ ] Tema escuro.
 - [ ] Instalador (MSIX ou Inno Setup).
 - [ ] Assinatura de código do .exe (evitar aviso do SmartScreen).
@@ -162,8 +186,9 @@ Descartado por decisão do usuário: persistir histórico em disco; alerta de "p
 2. Histórico sobreviver a reinícios → não.
 3. Alertas → só de consumo acima de um limite; nada de "primeira conexão".
 4. Filtros Windows/Microsoft → ligados por padrão.
+5. Alerta padrão de 100 MB em 5 min → aprovado para começar.
+6. Idioma → só pt-BR por enquanto, mas preparado para inglês no futuro.
 
 ## 7. Perguntas em aberto
 
-1. Prefere a interface em português apenas, ou português/inglês?
-2. Valores padrão do alerta (100 MB em 5 min) estão bons?
+Nenhuma no momento.

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using NetMonitor.Localization;
 using NetMonitor.Models;
 
 namespace NetMonitor.Services
@@ -21,7 +22,7 @@ namespace NetMonitor.Services
     public sealed class FirewallManager
     {
         public const string RuleGroup = "NetMonitor";
-        private const string RulePrefix = "NetMonitor - Bloqueio - ";
+        private static string RulePrefix => Loc.T("Rule_Prefix");
         private const string MetaPrefix = "[NetMonitor]";
 
         private const int NET_FW_RULE_DIR_IN = 1;
@@ -61,7 +62,7 @@ namespace NetMonitor.Services
         public void Block(AppIdentity app)
         {
             if (app.ExePath == null)
-                throw new InvalidOperationException("Este item não tem um executável associado e não pode ser bloqueado.");
+                throw new InvalidOperationException(Loc.T("Error_NoExecutable"));
 
             Unblock(app.Id); // evita regras duplicadas
 
@@ -75,7 +76,7 @@ namespace NetMonitor.Services
                 {
                     dynamic rule = Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule", true)!)!;
                     var label = service == null ? app.DisplayName : $"{app.DisplayName} ({service})";
-                    rule.Name = $"{RulePrefix}{label} ({(direction == NET_FW_RULE_DIR_OUT ? "saída" : "entrada")}) [{ShortHash(app.Id)}]";
+                    rule.Name = $"{RulePrefix}{label} ({Loc.T(direction == NET_FW_RULE_DIR_OUT ? "Rule_Outbound" : "Rule_Inbound")}) [{ShortHash(app.Id)}]";
                     // Metadados para reconstruir a lista de bloqueados a partir das próprias regras.
                     rule.Description = $"{MetaPrefix}id={Esc(app.Id)}|name={Esc(app.DisplayName)}|at={Esc(stamp)}";
                     rule.ApplicationName = app.ExePath;

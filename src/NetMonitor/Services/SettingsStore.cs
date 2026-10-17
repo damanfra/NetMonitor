@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using NetMonitor.Localization;
 
 namespace NetMonitor.Services
 {
@@ -16,6 +17,8 @@ namespace NetMonitor.Services
     public sealed class AppSettings
     {
         public int IntervalMinutes { get; set; } = 5;
+        /// <summary>Código do idioma da interface (ver Localization/Loc.cs).</summary>
+        public string Language { get; set; } = "pt-BR";
         public bool HideWindowsComponents { get; set; } = true;
         public bool HideMicrosoftApps { get; set; } = true;
         public bool CloseConnectionsOnBlock { get; set; } = true;

@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
+using NetMonitor.Localization;
 using NetMonitor.Services;
 using NetMonitor.ViewModels;
 using Forms = System.Windows.Forms;
@@ -20,8 +21,8 @@ namespace NetMonitor
 
             // Ícone na bandeja: minimizar não interrompe o monitoramento.
             var menu = new Forms.ContextMenuStrip();
-            menu.Items.Add("Abrir NetMonitor", null, (_, _) => RestoreFromTray());
-            menu.Items.Add("Sair", null, (_, _) => Close());
+            menu.Items.Add(Loc.T("Tray_Open"), null, (_, _) => RestoreFromTray());
+            menu.Items.Add(Loc.T("Tray_Exit"), null, (_, _) => Close());
             _tray = new Forms.NotifyIcon
             {
                 Icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? System.Drawing.SystemIcons.Shield,

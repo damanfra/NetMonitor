@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using NetMonitor.Localization;
 using NetMonitor.Services;
 using NetMonitor.ViewModels;
 
@@ -33,6 +34,7 @@ namespace NetMonitor
             }
 
             var settings = SettingsStore.Load();
+            Loc.Instance.SetLanguage(settings.Language);
             var store = new TrafficStore();
             var resolver = new ProcessResolver();
             var dns = new DnsNameCache();
@@ -41,19 +43,19 @@ namespace NetMonitor
 
             if (!EtwTrafficMonitor.IsElevated)
             {
-                vm.ErrorBanner = "O NetMonitor precisa ser executado como Administrador para monitorar o tráfego e criar regras de firewall.";
+                vm.ErrorBanner = Loc.T("Error_NotElevated");
             }
             else
             {
                 try
                 {
                     _monitor = new EtwTrafficMonitor(store, resolver, dns);
-                    _monitor.Failed += ex => Dispatcher.BeginInvoke(() => vm.ErrorBanner = "O monitoramento parou: " + ex.Message);
+                    _monitor.Failed += ex => Dispatcher.BeginInvoke(() => vm.ErrorBanner = Loc.T("Error_MonitorStopped", ex.Message));
                     _monitor.Start();
                 }
                 catch (Exception ex)
                 {
-                    vm.ErrorBanner = "Não foi possível iniciar o monitoramento (ETW): " + ex.Message;
+                    vm.ErrorBanner = Loc.T("Error_MonitorStart", ex.Message);
                 }
             }
 

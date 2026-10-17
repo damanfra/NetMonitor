@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
+using NetMonitor.Localization;
 using NetMonitor.Services;
 
 namespace NetMonitor.ViewModels
@@ -32,7 +33,7 @@ namespace NetMonitor.ViewModels
         private IntervalOption _selectedInterval;
         private string _searchText = "";
         private AppRowViewModel? _selectedRow;
-        private string _statusText = "Iniciando…";
+        private string _statusText = Loc.T("Status_Starting");
         private string? _errorBanner;
         private bool _firewallDisabled;
         private string _totalDownText = "0 B", _totalUpText = "0 B", _rateText = "";
@@ -48,14 +49,14 @@ namespace NetMonitor.ViewModels
 
             Intervals = new List<IntervalOption>
             {
-                new("Último 1 minuto", 1),
-                new("Últimos 5 minutos", 5),
-                new("Últimos 10 minutos", 10),
-                new("Últimos 15 minutos", 15),
-                new("Últimos 30 minutos", 30),
-                new("Última 1 hora", 60),
-                new("Últimas 3 horas", 180),
-                new("Últimas 24 horas", 1440),
+                new(1),
+                new(5),
+                new(10),
+                new(15),
+                new(30),
+                new(60),
+                new(180),
+                new(1440),
             };
             _selectedInterval = Intervals.FirstOrDefault(i => i.Minutes == settings.IntervalMinutes) ?? Intervals[1];
 
@@ -75,7 +76,7 @@ namespace NetMonitor.ViewModels
             OpenFirewallCommand = new RelayCommand(_ => Shell("wf.msc"));
             OpenSettingsFolderCommand = new RelayCommand(_ => Shell(SettingsStore.Folder));
             TestNotificationCommand = new RelayCommand(_ => NotificationRequested?.Invoke(
-                "NetMonitor — teste", "As notificações de consumo estão funcionando."));
+                Loc.T("Notification_TestTitle"), Loc.T("Notification_TestBody")));
 
             try { _startWithWindows = StartupManager.IsEnabled(); }
             catch { _startWithWindows = false; }
@@ -103,7 +104,7 @@ namespace NetMonitor.ViewModels
         /// <summary>Pedido de notificação na bandeja (título, texto). A janela é quem exibe.</summary>
         public event Action<string, string>? NotificationRequested;
 
-        public string VersionText => "Versão " + (typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "?");
+        public string VersionText => Loc.T("Settings_Version", typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "?");
         public string SettingsFilePath => SettingsStore.FilePath;
 
         // ---------- Configurações ----------
@@ -121,12 +122,12 @@ namespace NetMonitor.ViewModels
                     else StartupManager.Disable();
                     _startWithWindows = value;
                     StatusText = value
-                        ? "O NetMonitor vai iniciar com o Windows (minimizado na bandeja)."
-                        : "O NetMonitor não vai mais iniciar com o Windows.";
+                        ? Loc.T("Status_StartupEnabled")
+                        : Loc.T("Status_StartupDisabled");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Não foi possível alterar a inicialização automática:\n" + ex.Message, "Erro",
+                    MessageBox.Show(Loc.T("Error_Startup", ex.Message), Loc.T("Common_Error"),
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 Raise(nameof(StartWithWindows));
@@ -138,6 +139,25 @@ namespace NetMonitor.ViewModels
         {
             get => !StartWithWindows;
             set { if (value) StartWithWindows = false; }
+        }
+
+        public IReadOnlyList<LanguageOption> Languages => Loc.Supported;
+
+        public string LanguageCode
+        {
+            get => Loc.Instance.Culture.Name;
+            set
+            {
+                if (string.Equals(value, _settings.Language, StringComparison.OrdinalIgnoreCase))
+                    return;
+                _settings.Language = value;
+                SettingsStore.Save(_settings);
+                Loc.Instance.SetLanguage(value);
+                Raise(nameof(LanguageCode));
+                Raise(nameof(VersionText));
+                Raise(nameof(Intervals));
+                Refresh();
+            }
         }
 
         public bool MinimizeToTray
@@ -230,9 +250,9 @@ namespace NetMonitor.ViewModels
         public string TotalUpText { get => _totalUpText; private set => Set(ref _totalUpText, value); }
         public string RateText { get => _rateText; private set => Set(ref _rateText, value); }
 
-        public string ActivityTabHeader => $"Atividade ({ActivityRows.Count})";
-        public string BlockedTabHeader => $"Bloqueados ({BlockedRows.Count})";
-        public string HiddenTabHeader => $"Ocultos ({_settings.HiddenApps.Count})";
+        public string ActivityTabHeader => Loc.T("Tab_Activity", ActivityRows.Count);
+        public string BlockedTabHeader => Loc.T("Tab_Blocked", BlockedRows.Count);
+        public string HiddenTabHeader => Loc.T("Tab_Hidden", _settings.HiddenApps.Count);
 
         public void Start()
         {
@@ -326,7 +346,7 @@ namespace NetMonitor.ViewModels
 
             Raise(nameof(ActivityTabHeader));
             Raise(nameof(HiddenTabHeader));
-            StatusText = $"{ActivityRows.Count} app(s) com atividade em: {SelectedInterval.Label.ToLowerInvariant()} — atualizado às {DateTime.Now:HH:mm:ss}";
+            StatusText = Loc.T("Status_Summary", ActivityRows.Count, SelectedInterval.Label.ToLower(Loc.Instance.Culture), DateTime.Now);
         }
 
         /// <summary>
@@ -350,11 +370,11 @@ namespace NetMonitor.ViewModels
                     continue;
 
                 _lastAlertByApp[s.App.Id] = now;
-                var label = Intervals.FirstOrDefault(i => i.Minutes == _settings.AlertWindowMinutes)?.Label.ToLowerInvariant()
-                            ?? $"últimos {_settings.AlertWindowMinutes} minutos";
+                var label = Intervals.FirstOrDefault(i => i.Minutes == _settings.AlertWindowMinutes)?.Label.ToLower(Loc.Instance.Culture)
+                            ?? Loc.T("Alert_LastMinutes", _settings.AlertWindowMinutes);
                 NotificationRequested(
-                    $"Alto consumo: {s.App.DisplayName}",
-                    $"{Format.Bytes(total)} ({label}) — ↓ {Format.Bytes(s.Received)}  ↑ {Format.Bytes(s.Sent)}.\nAbra o NetMonitor para bloquear, se quiser.");
+                    Loc.T("Alert_Title", s.App.DisplayName),
+                    Loc.T("Alert_Body", Format.Bytes(total), label, Format.Bytes(s.Received), Format.Bytes(s.Sent)));
             }
         }
 
@@ -399,7 +419,7 @@ namespace NetMonitor.ViewModels
             }
             catch (Exception ex)
             {
-                StatusText = "Não foi possível ler as regras do Firewall: " + ex.Message;
+                StatusText = Loc.T("Error_ReadRules", ex.Message);
             }
             Raise(nameof(BlockedTabHeader));
         }
@@ -419,17 +439,14 @@ namespace NetMonitor.ViewModels
                 return;
 
             var warning = identity.IsWindowsComponent
-                ? "\n\n⚠ ATENÇÃO: este é um componente do Windows. Bloqueá-lo pode afetar atualizações, " +
-                  "resolução de nomes (DNS), horário, rede local etc. Se algo parar de funcionar, " +
-                  "desbloqueie na aba \"Bloqueados\"."
+                ? "\n\n" + Loc.T("Block_WindowsWarning")
                 : "";
             var target = identity.Services.Count > 0
-                ? $"Serviço(s): {string.Join(", ", identity.Services)}\nExecutável: {identity.ExePath}"
+                ? Loc.T("Block_ServiceTarget", string.Join(", ", identity.Services), identity.ExePath)
                 : identity.ExePath;
             if (MessageBox.Show(
-                    $"Bloquear todo o acesso à rede (entrada e saída) de:\n\n{identity.DisplayName}\n{target}" +
-                    $"\n\nSerá criada uma regra no Firewall do Windows. Você pode desfazer a qualquer momento.{warning}",
-                    "Bloquear aplicativo", MessageBoxButton.OKCancel,
+                    Loc.T("Block_Confirm", identity.DisplayName, target) + warning,
+                    Loc.T("Block_ConfirmTitle"), MessageBoxButton.OKCancel,
                     identity.IsWindowsComponent ? MessageBoxImage.Warning : MessageBoxImage.Question) != MessageBoxResult.OK)
                 return;
 
@@ -439,11 +456,11 @@ namespace NetMonitor.ViewModels
                 var closed = 0;
                 if (CloseConnectionsOnBlock && identity.Services.Count == 0)
                     closed = ConnectionKiller.CloseTcpConnections(_resolver.PidsFor(identity.Id));
-                StatusText = $"\"{identity.DisplayName}\" bloqueado." + (closed > 0 ? $" {closed} conexão(ões) ativa(s) encerrada(s)." : "");
+                StatusText = Loc.T("Status_Blocked", identity.DisplayName) + (closed > 0 ? " " + Loc.T("Status_ConnectionsClosed", closed) : "");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Falha ao criar a regra de firewall:\n" + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.T("Error_CreateRule", ex.Message), Loc.T("Common_Error"), MessageBoxButton.OK, MessageBoxImage.Error);
             }
             RefreshBlocked();
             Refresh();
@@ -460,11 +477,11 @@ namespace NetMonitor.ViewModels
             try
             {
                 _firewall.Unblock(id);
-                StatusText = $"\"{name}\" desbloqueado.";
+                StatusText = Loc.T("Status_Unblocked", name);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Falha ao remover a regra de firewall:\n" + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(Loc.T("Error_RemoveRule", ex.Message), Loc.T("Common_Error"), MessageBoxButton.OK, MessageBoxImage.Error);
             }
             RefreshBlocked();
             Refresh();
@@ -472,7 +489,7 @@ namespace NetMonitor.ViewModels
 
         private void UnblockAll()
         {
-            if (MessageBox.Show($"Remover o bloqueio de todos os {BlockedRows.Count} aplicativo(s)?", "Desbloquear todos",
+            if (MessageBox.Show(Loc.T("UnblockAll_Confirm", BlockedRows.Count), Loc.T("Blocked_UnblockAll"),
                     MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
                 return;
             foreach (var row in BlockedRows.ToList())
@@ -480,7 +497,7 @@ namespace NetMonitor.ViewModels
                 try { _firewall.Unblock(row.AppId); }
                 catch { /* segue com os demais */ }
             }
-            StatusText = "Todos os bloqueios foram removidos.";
+            StatusText = Loc.T("Status_AllUnblocked");
             RefreshBlocked();
             Refresh();
         }
@@ -494,7 +511,7 @@ namespace NetMonitor.ViewModels
                 Id = row.Id, DisplayName = row.DisplayName, ExePath = row.ExePath, HiddenAt = DateTime.Now,
             });
             SettingsStore.Save(_settings);
-            StatusText = $"\"{row.DisplayName}\" foi para a aba Ocultos.";
+            StatusText = Loc.T("Status_Hidden", row.DisplayName);
             Refresh();
         }
 
@@ -504,7 +521,7 @@ namespace NetMonitor.ViewModels
                 return;
             _settings.HiddenApps.RemoveAll(h => string.Equals(h.Id, row.Id, StringComparison.OrdinalIgnoreCase));
             SettingsStore.Save(_settings);
-            StatusText = $"\"{row.DisplayName}\" voltou a ser exibido.";
+            StatusText = Loc.T("Status_Unhidden", row.DisplayName);
             Refresh();
         }
 

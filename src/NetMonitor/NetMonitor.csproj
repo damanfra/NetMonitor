@@ -12,6 +12,9 @@
     <AssemblyName>NetMonitor</AssemblyName>
     <RootNamespace>NetMonitor</RootNamespace>
     <Version>1.0.0</Version>
+    <NeutralLanguage>pt-BR</NeutralLanguage>
+    <!-- Gera só os idiomas que temos (evita pastas de satélite de pacotes NuGet). Ao adicionar inglês: pt-BR;en -->
+    <SatelliteResourceLanguages>pt-BR</SatelliteResourceLanguages>
     <Product>NetMonitor</Product>
     <Description>Monitor de tráfego de rede por aplicativo com bloqueio via Firewall do Windows</Description>
     <!-- Permite compilar a partir de Linux/macOS (CI); o executável só roda no Windows. -->

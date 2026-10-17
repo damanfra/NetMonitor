@@ -1,11 +1,12 @@
 using System;
 using System.Globalization;
+using NetMonitor.Localization;
 
 namespace NetMonitor.Services
 {
     public static class Format
     {
-        private static readonly CultureInfo Culture = CultureInfo.GetCultureInfo("pt-BR");
+        private static CultureInfo Culture => Loc.Instance.Culture;
         private static readonly string[] Units = { "B", "KB", "MB", "GB", "TB" };
 
         public static string Bytes(long bytes)
@@ -25,10 +26,10 @@ namespace NetMonitor.Services
         public static string Ago(DateTime utc, DateTime nowUtc)
         {
             var d = nowUtc - utc;
-            if (d.TotalSeconds < 5) return "agora";
-            if (d.TotalSeconds < 60) return $"há {(int)d.TotalSeconds} s";
-            if (d.TotalMinutes < 60) return $"há {(int)d.TotalMinutes} min";
-            return utc.ToLocalTime().ToString("HH:mm", Culture);
+            if (d.TotalSeconds < 5) return Loc.T("Ago_Now");
+            if (d.TotalSeconds < 60) return Loc.T("Ago_Seconds", (int)d.TotalSeconds);
+            if (d.TotalMinutes < 60) return Loc.T("Ago_Minutes", (int)d.TotalMinutes);
+            return utc.ToLocalTime().ToString("t", Culture);
         }
     }
 }

@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Text;
+using NetMonitor.Localization;
 using NetMonitor.Interop;
 using NetMonitor.Models;
 
@@ -61,7 +62,7 @@ namespace NetMonitor.Services
         private AppIdentity Build(int pid)
         {
             if (pid == 0 || pid == 4)
-                return new AppIdentity("system", "Sistema (Kernel do Windows)", null, Array.Empty<string>(),
+                return new AppIdentity("system", Loc.T("App_System"), null, Array.Empty<string>(),
                     "NT Kernel & System", "Microsoft Corporation", true);
 
             var path = GetImagePath(pid);
@@ -79,7 +80,7 @@ namespace NetMonitor.Services
                 }
 
                 return name == null
-                    ? new AppIdentity("pid:unknown", "Processo encerrado / desconhecido", null, Array.Empty<string>(),
+                    ? new AppIdentity("pid:unknown", Loc.T("App_Unknown"), null, Array.Empty<string>(),
                         null, null, false)
                     : new AppIdentity("name:" + name.ToLowerInvariant(), name, null, Array.Empty<string>(),
                         null, null, false);
@@ -95,7 +96,7 @@ namespace NetMonitor.Services
                 if (services.Count > 0)
                 {
                     var id = path.ToLowerInvariant() + "|" + string.Join(",", services).ToLowerInvariant();
-                    var display = "Serviço: " + string.Join(", ", services.Select(ServiceDisplayName));
+                    var display = Loc.T("App_ServicePrefix", string.Join(", ", services.Select(ServiceDisplayName)));
                     return new AppIdentity(id, display, path, services, string.Join(", ", services), company, isWindows);
                 }
             }
