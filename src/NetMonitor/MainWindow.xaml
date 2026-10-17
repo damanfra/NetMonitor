@@ -1,0 +1,232 @@
+<Window x:Class="NetMonitor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="NetMonitor — tráfego de rede por aplicativo"
+        Width="1180" Height="760" MinWidth="820" MinHeight="480"
+        Background="#F7F8FA" FontFamily="Segoe UI" FontSize="13"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <!-- Célula "aplicativo": ícone + nome + subtítulo -->
+        <DataTemplate x:Key="AppCell">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" ToolTip="{Binding ExePath}">
+                <Image Source="{Binding Icon}" Width="20" Height="20" Margin="4,0,8,0" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding Subtitle}" FontSize="11" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Border Background="#FEE2E2" CornerRadius="3" Padding="5,0" Margin="8,0,0,0" VerticalAlignment="Center"
+                        Visibility="{Binding IsBlocked, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="BLOQUEADO" FontSize="10" FontWeight="Bold" Foreground="#B91C1C" />
+                </Border>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TotalCell">
+            <StackPanel VerticalAlignment="Center" Margin="4,0">
+                <TextBlock Text="{Binding TotalText}" FontWeight="SemiBold" />
+                <ProgressBar Value="{Binding Share, Mode=OneWay}" Maximum="1" Height="3" BorderThickness="0"
+                             Background="#E5E7EB" Foreground="{StaticResource Accent}" />
+            </StackPanel>
+        </DataTemplate>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Barra superior -->
+        <Border DockPanel.Dock="Top" Background="White" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="14,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Mostrar atividade de:" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <ComboBox ItemsSource="{Binding Intervals}" SelectedItem="{Binding SelectedInterval}"
+                              DisplayMemberPath="Label" Width="160" />
+                    <TextBlock Text="Buscar:" VerticalAlignment="Center" Margin="16,0,6,0" />
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Width="180" VerticalContentAlignment="Center" />
+                    <CheckBox Content="Ocultar componentes do Windows" IsChecked="{Binding HideWindowsComponents}"
+                              VerticalAlignment="Center" Margin="16,0,0,0"
+                              ToolTip="Esconde executáveis da pasta do Windows (svchost, System, etc.)" />
+                    <CheckBox Content="Ocultar apps da Microsoft" IsChecked="{Binding HideMicrosoftApps}"
+                              VerticalAlignment="Center" Margin="12,0,0,0"
+                              ToolTip="Esconde qualquer executável cuja empresa seja Microsoft (Edge, OneDrive, Teams…)" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="↓ " Foreground="{StaticResource Down}" FontWeight="Bold" />
+                    <TextBlock Text="{Binding TotalDownText}" FontWeight="SemiBold" />
+                    <TextBlock Text="   ↑ " Foreground="{StaticResource Up}" FontWeight="Bold" />
+                    <TextBlock Text="{Binding TotalUpText}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding RateText}" Foreground="{StaticResource Muted}" Margin="14,0,0,0" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Avisos -->
+        <Border DockPanel.Dock="Top" Background="#FEE2E2" Padding="14,6" Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+            <TextBlock Text="{Binding ErrorBanner}" Foreground="#991B1B" TextWrapping="Wrap" />
+        </Border>
+        <Border DockPanel.Dock="Top" Background="#FEF3C7" Padding="14,6" Visibility="{Binding FirewallDisabled, Converter={StaticResource BoolToVis}}">
+            <TextBlock Foreground="#92400E" TextWrapping="Wrap"
+                       Text="O Firewall do Windows está DESATIVADO no perfil de rede atual — os bloqueios não terão efeito até ele ser reativado." />
+        </Border>
+
+        <!-- Barra de status -->
+        <Border DockPanel.Dock="Bottom" Background="White" BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Padding="14,4">
+            <DockPanel>
+                <CheckBox DockPanel.Dock="Right" Content="Ao bloquear, derrubar conexões já abertas"
+                          IsChecked="{Binding CloseConnectionsOnBlock}" />
+                <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource Muted}" />
+            </DockPanel>
+        </Border>
+
+        <TabControl Margin="10" Padding="0">
+            <!-- ================= ATIVIDADE ================= -->
+            <TabItem Header="{Binding ActivityTabHeader}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" MinHeight="120" />
+                        <RowDefinition Height="5" />
+                        <RowDefinition Height="200" MinHeight="60" />
+                    </Grid.RowDefinitions>
+
+                    <DataGrid x:Name="ActivityGrid" ItemsSource="{Binding ActivityRows}"
+                              SelectedItem="{Binding SelectedRow}">
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Bloquear / desbloquear" Command="{Binding ToggleBlockCommand}" CommandParameter="{Binding SelectedRow}" />
+                                <MenuItem Header="Ocultar da lista" Command="{Binding HideCommand}" CommandParameter="{Binding SelectedRow}" />
+                                <Separator />
+                                <MenuItem Header="Abrir local do arquivo" Command="{Binding OpenLocationCommand}" CommandParameter="{Binding SelectedRow}" />
+                                <MenuItem Header="Copiar caminho" Command="{Binding CopyPathCommand}" CommandParameter="{Binding SelectedRow}" />
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Aplicativo" Width="*" SortMemberPath="DisplayName" CellTemplate="{StaticResource AppCell}" />
+                            <DataGridTextColumn Header="↓ Download" Binding="{Binding DownloadText}" SortMemberPath="Download" Width="95" />
+                            <DataGridTextColumn Header="↑ Upload" Binding="{Binding UploadText}" SortMemberPath="Upload" Width="95" />
+                            <DataGridTemplateColumn Header="Total" SortMemberPath="Total" Width="110" CellTemplate="{StaticResource TotalCell}" />
+                            <DataGridTextColumn Header="Agora" Binding="{Binding RateText}" SortMemberPath="CurrentRate" Width="170" />
+                            <DataGridTextColumn Header="Últ. atividade" Binding="{Binding LastSeenText}" SortMemberPath="LastSeenUtc" Width="95" />
+                            <DataGridTextColumn Header="Hosts" Binding="{Binding HostCount}" SortMemberPath="HostCount" Width="55" />
+                            <DataGridTemplateColumn Header="Ações" Width="185">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Content="{Binding BlockButtonText}" Width="85"
+                                                    Command="{Binding DataContext.ToggleBlockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}" />
+                                            <Button Content="Ocultar" Width="75"
+                                                    Command="{Binding DataContext.HideCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" Background="#E5E7EB" />
+
+                    <!-- Detalhes do app selecionado -->
+                    <DockPanel Grid.Row="2" Background="White">
+                        <StackPanel DockPanel.Dock="Top" Margin="10,6">
+                            <TextBlock FontWeight="SemiBold">
+                                <Run Text="Conexões de: " /><Run Text="{Binding SelectedRow.DisplayName, Mode=OneWay}" />
+                            </TextBlock>
+                            <TextBlock Foreground="{StaticResource Muted}" FontSize="11" TextTrimming="CharacterEllipsis">
+                                <Run Text="{Binding SelectedRow.ExePath, Mode=OneWay}" /><Run Text="   PIDs: " /><Run Text="{Binding SelectedRow.PidsText, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
+                        <DataGrid ItemsSource="{Binding SelectedRow.Hosts}" RowHeight="24">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Host" Binding="{Binding HostName}" Width="*" />
+                                <DataGridTextColumn Header="IP" Binding="{Binding Address}" Width="220" />
+                                <DataGridTextColumn Header="Porta" Binding="{Binding Port}" Width="60" />
+                                <DataGridTextColumn Header="↓ Recebido*" Binding="{Binding DownloadText}" Width="95" />
+                                <DataGridTextColumn Header="↑ Enviado*" Binding="{Binding UploadText}" Width="95" />
+                                <DataGridTextColumn Header="Últ. atividade" Binding="{Binding LastSeenText}" Width="95" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- ================= BLOQUEADOS ================= -->
+            <TabItem Header="{Binding BlockedTabHeader}">
+                <DockPanel>
+                    <Border DockPanel.Dock="Top" Padding="10,8" Background="White">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Content="Abrir Firewall do Windows" Command="{Binding OpenFirewallCommand}" />
+                                <Button Content="Desbloquear todos" Command="{Binding UnblockAllCommand}" />
+                            </StackPanel>
+                            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Muted}" VerticalAlignment="Center"
+                                       Text="Bloqueios são regras do Firewall do Windows (grupo &quot;NetMonitor&quot;). Continuam valendo com o NetMonitor fechado. Se algo quebrar, clique em Desbloquear." />
+                        </DockPanel>
+                    </Border>
+                    <DataGrid ItemsSource="{Binding BlockedRows}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Aplicativo" Width="*" SortMemberPath="DisplayName">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Image Source="{Binding Icon}" Width="20" Height="20" Margin="4,0,8,0" />
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding ExePath}" FontSize="11" Foreground="{StaticResource Muted}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Serviço" Binding="{Binding Service}" Width="160" />
+                            <DataGridTextColumn Header="Bloqueado em" Binding="{Binding BlockedAtText}" Width="130" />
+                            <DataGridTemplateColumn Header="" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Desbloquear" VerticalAlignment="Center"
+                                                Command="{Binding DataContext.UnblockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- ================= OCULTOS ================= -->
+            <TabItem Header="{Binding HiddenTabHeader}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Margin="10,8" Foreground="{StaticResource Muted}" TextWrapping="Wrap"
+                               Text="Apps que você marcou como seguros/irrelevantes. Eles continuam sendo monitorados (o tráfego do intervalo aparece aqui), só não poluem a aba Atividade." />
+                    <DataGrid ItemsSource="{Binding HiddenRows}" SelectedItem="{Binding SelectedRow}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Aplicativo" Width="*" SortMemberPath="DisplayName" CellTemplate="{StaticResource AppCell}" />
+                            <DataGridTextColumn Header="↓ Download" Binding="{Binding DownloadText}" SortMemberPath="Download" Width="95" />
+                            <DataGridTextColumn Header="↑ Upload" Binding="{Binding UploadText}" SortMemberPath="Upload" Width="95" />
+                            <DataGridTemplateColumn Header="Total" SortMemberPath="Total" Width="110" CellTemplate="{StaticResource TotalCell}" />
+                            <DataGridTextColumn Header="Últ. atividade" Binding="{Binding LastSeenText}" SortMemberPath="LastSeenUtc" Width="95" />
+                            <DataGridTemplateColumn Header="Ações" Width="250">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Content="Mostrar novamente" Width="130"
+                                                    Command="{Binding DataContext.UnhideCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}" />
+                                            <Button Content="{Binding BlockButtonText}" Width="95"
+                                                    Command="{Binding DataContext.ToggleBlockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>
